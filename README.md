@@ -58,6 +58,10 @@ Exercices 2.82, 2.83, 2.84, 2.85, 2.86
 
 Seem somewhat complicated, and seem like the "extension-type" exercises that give you deeper understanding of the topic. 
 
+### This paragraph in the section of type coercion (type casting) ###
+...Yeah ... i might ... fiddle with this ...
+
+This coercion scheme has many advantages over the method of defining explicit cross-type operations, as outlined above. Although we still need to write coercion procedures to relate the types (possibly n 2 procedures for a system with n types), we need to write only one procedure for each pair of types rather than a different procedure for each collection of types and each generic operation.117 What we are counting on here is the fact that the appropriate transformation between types depends only on the types themselves, not on the operation to be applied. 
 ## Note ##
 
 There are still a number of individual exercises that i will record for posterior practice.

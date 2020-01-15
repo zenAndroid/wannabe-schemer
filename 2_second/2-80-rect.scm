@@ -1,17 +1,26 @@
 (define (install-rectangular-package op-table) ; op-table is the table that shall be passe in
   ;; internal procedures, we wont touch these because they are internal
+
   (define (square x) (* x x))
+
   (define (real-part z) (car z))
+
   (define (imag-part z) (cdr z))
+
   (define (make-from-real-imag x y) (cons x y))
+
   (define (magnitude z)
     (sqrt (+ (square (real-part z))
              (square (imag-part z)))))
+
   (define (angle z)
     (atan (imag-part z) (real-part z)))
+
   (define (make-from-mag-ang r a)
     (cons (* r (cos a)) (* r (sin a))))
+
   ;; interface to the rest of the system
+
   (define (tag x) (attach-tag 'rectangular x))
 
   ; (put 'real-part '(rectangular) real-part) 
@@ -57,6 +66,7 @@
     (put fifth-op 'make-from-mag-ang 'rectangular
        (lambda (r a)
          (tag (make-from-mag-ang r a)))))
+
   sixth-op)
 
 

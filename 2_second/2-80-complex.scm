@@ -1,9 +1,9 @@
 (define (install-complex-package op-table)
   (define (make-real-imag x y)
-    ((get MAIN-TABLE 'make-from-real-imag 'rectangular)
+    ((get op-table 'make-from-real-imag 'rectangular)
      x y))
   (define (make-from-mag-ang r a)
-    ((get MAIN-TABLE 'make-from-mag-ang 'polar)
+    ((get op-table 'make-from-mag-ang 'polar)
      r a))
   ;; internal procedures
   (define (add-complex z1 z2)
@@ -51,7 +51,19 @@
     (put eight-op 'magnitude '(complex) magnitude))
   (define tenth-op
     (put nineth-op 'angle '(complex) angle))
-  tenth-op)
+  (define eleventh-op
+    (put tenth-op 'equ? '(complex complex) 
+         (lambda(x y) 
+           (and (= (real-part x) (real-part y)) 
+                (= (imag-part x) (imag-part y))))))
+  (define twelfth-op 
+    (put eleventh-op '=zero? '(complex)
+         (lambda(z) (and (= (real-part z) 
+                            (imag-part z)
+                            0)))))
+
+twelfth-op)
+
 (define (make-complex-from-real-imag x y) 
   ((get MAIN-TABLE 'make-from-real-imag 'complex) x y))
 

@@ -18,14 +18,12 @@
 (define (type-tag datum)
   (if (pair? datum)
       (car datum)
-      (error "Bad tagged datum: 
-              TYPE-TAG" datum)))
+      (error "Bad tagged datum: TYPE-TAG" datum)))
 
 (define (contents datum)
   (if (pair? datum)
       (cdr datum)
-      (error "Bad tagged datum: 
-              CONTENTS" datum)))
+      (error "Bad tagged datum: CONTENTS" datum)))
 
 
 ; Functions to handle generic functionality
@@ -56,7 +54,7 @@
                   (cond (first-type->second-type (apply-generic op (first-type->second-type first-arg) second-arg))
                         (second-type->first-type (apply-generic op first-arg (second-type->first-type second-arg)))
                         (error "Cannot find a fitting operation" (list op type-tags)))))
-              (error "No method found" (list op type-tags)))))))
+              (error "No method found" (list op type-tags args)))))))
 
 
 (define (real-part z) (apply-generic 'real-part z))
@@ -68,3 +66,5 @@
 (define (sub x y) (apply-generic 'sub x y))
 (define (mul x y) (apply-generic 'mul x y))
 (define (div x y) (apply-generic 'div x y))
+(define (equ? x y) (apply-generic 'equ? x y))
+(define (=zero? x) (apply-generic '=zero? x))

@@ -31,9 +31,13 @@
 
 ; Function to turn a rational into a complex
 
-(define (rat->complex rat) 
+(trace-define (rat->complex rat) 
   (make-complex-from-real-imag
-    (/ (car (contents rat)) (cdr (contents rat))) 0))
+    (let ((numer (get MAIN-TABLE 'numer '(rational)))
+          (denom (get MAIN-TABLE 'denom '(rational))))
+      (/ (numer (contents rat))
+         (denom (contents rat))))
+    0))
 
 ; int -> rat -> complex
 
@@ -41,7 +45,6 @@
 (define COERCION (put '() 'scheme-number 'rational scheme-number->rat))
 (define COERCION (put COERCION 'scheme-number 'complex scheme-number->complex))
 (define COERCION (put COERCION 'rational 'complex rat->complex))
-
 (define testRat (make-rat 3 7))
 (displayln testRat)
 (displayln (rat->complex testRat))
@@ -67,3 +70,4 @@
 (displayln (=zero? (make-scheme-number 0)))
 (displayln (=zero? (make-complex-from-real-imag 3 2)))
 (displayln (=zero? (make-rat 3 5)))
+
