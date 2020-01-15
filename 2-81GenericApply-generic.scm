@@ -1,3 +1,4 @@
+(require racket/trace)
 (require racket/include)
 
 (include "2-80-synthesis.scm")
@@ -26,4 +27,29 @@
 
 ; Function to turn a scheme number to a complex
 
-(define (scheme-number->complex) (make-complex-from-real-imag
+(define (scheme-number->complex n) (make-complex-from-real-imag n 0))
+
+; Function to turn a rational into a complex
+
+(define (rat->complex rat) 
+  (make-complex-from-real-imag
+    (let ((numer (get MAIN-TABLE 'numer 'rational))
+          (denom (get MAIN-TABLE 'denom 'rational)))
+      (/ (numer rat)
+         (denom rat)))
+    0))
+
+; int -> rat -> complex
+
+
+(define COERCION (put '() 'scheme-number 'rational scheme-number->rat))
+(define COERCION (put COERCION 'scheme-number 'complex scheme-number->complex))
+(define COERCION (put COERCION 'rational 'complex rat->complex))
+(trace numer)
+(trace rat->complex)
+(define testRat (make-rat 3 7))
+(displayln testRat)
+(displayln (rat->complex testRat))
+
+(trace apply-generic)
+(displayln (add testRat (make-complex-from-real-imag 1 5)))

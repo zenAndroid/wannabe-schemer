@@ -5,7 +5,7 @@
   (cons (cons op (cons type item)) table))
 
 (define (get table op type)
-  (cond ((null? table) (error "Empty table ... RIP !"))
+  (cond ((null? table) #f)
         ((and (equal? op (caar table)) (equal? type (cadar table))) (cddar table))
         (else (get (cdr table) op type))))
 
@@ -31,15 +31,32 @@
 ; Functions to handle generic functionality
 
 
+; (define (apply-generic op . args)
+;   (let ((type-tags (map type-tag args)))
+;     (let ((proc (get MAIN-TABLE op type-tags)))
+;       (if proc
+;           (apply proc (map contents args))
+;           (error
+;             "No method for these types:
+;              APPLY-GENERIC"
+;             (list op type-tags))))))
+
 (define (apply-generic op . args)
   (let ((type-tags (map type-tag args)))
     (let ((proc (get MAIN-TABLE op type-tags)))
       (if proc
           (apply proc (map contents args))
-          (error
-            "No method for these types:
-             APPLY-GENERIC"
-            (list op type-tags))))))
+          (if (= (length args) 2)
+              (let ((first-arg (car args))
+                    (second-arg (cadr args))
+                    (first-type (type-tag (car args)))
+                    (second-type (type-tag (cadr args))))
+                (let ((first-type->second-type (get COERCION first-type second-type))
+                      (second-type->first-type (get COERCION second-type first-type)))
+                  (cond (first-type->second-type (apply-generic op (first-type->second-type first-arg) second-arg))
+                        (second-type->first-type (apply-generic op first-arg (second-type->first-type second-arg)))
+                        (error "Cannot find a fitting operation" (list op type-tags)))))
+              (error "No method found" (list op type-tags)))))))
 
 
 (define (real-part z) (apply-generic 'real-part z))
