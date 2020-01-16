@@ -1,6 +1,14 @@
 (require racket/include)
 
 (require racket/trace)
+;; 2020-01-15 20:31 :: zenAndroid
+;; I am being intentionnally verbose.
+;; The code honestly seems self-documenting, however maybe i'll change opinion
+;; if i get back to this code some time in the future :thinking:
+
+
+;; Either way, the best way *I* understood this was by taking apen and paper
+;; and going through the process manually.
 
 ;; Adding two polynomials
 
@@ -62,3 +70,34 @@
             (mul-by-all-terms (first-term term-list1) term-list2)
             (mul-terms (rest-of-terms term-list1) term-list2)))))
 
+;; Let's see what I need now:
+;; same-variable?, variable? ==> for controlling the polynomial variables
+;; variable, term-list ==> for the polynomial
+;; make-poly           ==> for the polynomial
+;; first-term          ==> selects the first term out of a list of terms
+;; order, coeff        ==> for the term
+;; make-term           ==> for the term
+;; empty-term-list?
+;; the-empty-term-list
+
+(define (install-polynomial-package op-table)
+
+  (define (make-poly variable term-list)
+    (cons variable term-list))
+
+  (define (variable poly)
+    (car poly))
+
+  (define (term-list poly)
+    (cdr poly))
+
+  (define (first-term poly)
+    (car (term-list poly)))
+
+  (define (variable? var)
+    (symbol? var))
+
+  (define (same-variable? v1 v2)
+    (and (variable? v1)
+         (variable? v2)
+         (eq? v1 v2)))
