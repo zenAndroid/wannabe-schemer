@@ -29,28 +29,38 @@ Here are :
 ### 1.2.6 Testing for optimality ###
 
 ### 2.1.4 EXTENDED EXERCISE : INTERVAL ARITHMETIC ###
+
  This one particularly spooked me, dunno if it was warranted or not
 
 ### Symbolic differentiation ###
+
 Which, coincidentally, i am working on at the moment of writing this (2019-04-12 14:58)
+
 ### Sets as trees ###
+
 And all of the trees shenanigans
+
 ### HUFFMAN TREES ###
+
 Need to see if i can actually, ... you know ... *USE* this thing instead of just implementing encoders/decoders that take/spit out a list of symbols .... :weary:
 
 In particular, need to pass the encoding function a *string*, not *a list of symbols* because i cant automate that.
+
 #### YES, USE STRING->SYMBOL ####
+
 Why didn't i think if that beforehand :sweat_smile:
 
 ### Data-directed programming ###
+
 I think I understand the general concept, but I think it's still fuzzy in my mind.
 
 Might be due to the fact that i didn't do the exercises ...
 
 ### New types vs New operations ###
-Hmmm, this is some vague bullshit, i understqnd it somewhat but need
-to revisit
-Message-passing vs Data-directed method
+
+Hmmm, this is some vague bullshit, i understand it somewhat but need to revisit
+
+Message-passing vs Data-directed method.
 
 ### Section 2.5 : Generic operations (YET AGAIN) ###
 
@@ -62,6 +72,17 @@ Seem somewhat complicated, and seem like the "extension-type" exercises that giv
 ...Yeah ... i might ... fiddle with this ...
 
 This coercion scheme has many advantages over the method of defining explicit cross-type operations, as outlined above. Although we still need to write coercion procedures to relate the types (possibly n 2 procedures for a system with n types), we need to write only one procedure for each pair of types rather than a different procedure for each collection of types and each generic operation.117 What we are counting on here is the fact that the appropriate transformation between types depends only on the types themselves, not on the operation to be applied. 
+
+### Exercices about the polynomials ###
+
+Did exercice 2.87, not particularly difficult.
+Exercice 2.89 qmd 2.90 truly don't interest me, seems like way too much effort for the same rational/polar shenanigans.
+Exercice 2.88 and 2.91 sound neat, maybe ill do it later.
+
+Honestly im pretty tired from this chapter ...
+
+The extended exercice on rational function will probably also have to wait until later when (if) ill be revisiting this.
+
 ## Note ##
 
 There are still a number of individual exercises that i will record for posterior practice.
