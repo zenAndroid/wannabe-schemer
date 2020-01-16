@@ -124,6 +124,15 @@
             (mul (coeff t1) (coeff (first-term term-list))))
           (mul-terms term (rest-of-terms term-list)))))
 
+  (define (nil-polynomial poly)
+    (cond ((empty-term-list? (term-list poly)) #t)
+          ((not (=zero? (coeff (first-term (term-list poly)))))
+           #f)
+          (else
+            (nil-polynomial 
+              (make-poly
+                (variable poly)
+                (rest-of-terms (term-list poly)))))))
 
   ;; ---------------------------------
 
@@ -141,7 +150,11 @@
     (put second-op 'mul '(polynomial polynomial)
          (lambda(pol1 pol2) (tag (mul-polys pol1 pol2)))))
 
-  third-op)
+  (define fourth-op
+    (put third-op '=zero? '(polynomial)
+         (lambda(pol) (nil-polynomial pol))))
+
+  fourth-op)
 
 
 ;; Exposing the functions to make polynomials
@@ -184,3 +197,6 @@
 
 (displayln (add pol poly-example))
 
+(displayln zero-pol)
+
+(=zero? zero-pol)
