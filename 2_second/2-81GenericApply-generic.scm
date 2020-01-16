@@ -42,28 +42,30 @@
 (define COERCION (put COERCION 'scheme-number 'complex scheme-number->complex))
 (define COERCION (put COERCION 'rational 'complex rat->complex))
 
-(define testRat (make-rat 3 7))
-(displayln testRat)
-(displayln (rat->complex testRat))
-
-(displayln "add sub mul div test rat and 1+5i")
-(displayln (add testRat (make-complex-from-real-imag 1 5)))
-(displayln (sub testRat (make-complex-from-real-imag 1 5)))
-(displayln (mul testRat (make-complex-from-real-imag 1 5)))
-(displayln (div testRat (make-complex-from-real-imag 1 5)))
-
-(displayln "add sub mul div 5  and 2/5")
-(displayln (add (make-scheme-number 5) (make-rat 2 5)))
-(displayln (sub (make-scheme-number 5) (make-rat 2 5)))
-(displayln (mul (make-scheme-number 5) (make-rat 2 5)))
-(displayln (div (make-scheme-number 5) (make-rat 2 5)))
-
-(displayln "add sub mul div 5 and 1+5i")
-(displayln (add (make-scheme-number 5) (make-complex-from-real-imag 1 5)))
-(displayln (sub (make-scheme-number 5) (make-complex-from-real-imag 1 5)))
-(displayln (mul (make-scheme-number 5) (make-complex-from-real-imag 1 5)))
-(displayln (div (make-scheme-number 5) (make-complex-from-real-imag 1 5)))
-
-(displayln (=zero? (make-scheme-number 0)))
-(displayln (=zero? (make-complex-from-real-imag 3 2)))
-(displayln (=zero? (make-rat 3 5)))
+; PART OF TESTING :: (define testRat (make-rat 3 7))
+; PART OF TESTING :: (displayln testRat)
+; PART OF TESTING :: (displayln (rat->complex testRat))
+; PART OF TESTING :: 
+; PART OF TESTING :: (displayln "add sub mul div test rat and 1+5i")
+; PART OF TESTING :: (displayln (add testRat (make-complex-from-real-imag 1 5)))
+; PART OF TESTING :: (displayln (sub testRat (make-complex-from-real-imag 1 5)))
+; PART OF TESTING :: (displayln (mul testRat (make-complex-from-real-imag 1 5)))
+; PART OF TESTING :: (displayln (div testRat (make-complex-from-real-imag 1 5)))
+; PART OF TESTING :: 
+; PART OF TESTING :: (displayln "add sub mul div 5  and 2/5")
+; PART OF TESTING :: (displayln (add (make-scheme-number 5) (make-rat 2 5)))
+; PART OF TESTING :: (displayln (sub (make-scheme-number 5) (make-rat 2 5)))
+; PART OF TESTING :: (displayln (mul (make-scheme-number 5) (make-rat 2 5)))
+; PART OF TESTING :: (displayln (div (make-scheme-number 5) (make-rat 2 5)))
+; PART OF TESTING :: 
+; PART OF TESTING :: (displayln "add sub mul div 5 and 1+5i")
+; PART OF TESTING :: (displayln (add (make-scheme-number 5) (make-complex-from-real-imag 1 5)))
+; PART OF TESTING :: (displayln (sub (make-scheme-number 5) (make-complex-from-real-imag 1 5)))
+; PART OF TESTING :: 
+; (define tee (mul (make-scheme-number 5) (make-complex-from-real-imag 1 5)))
+; (displayln (make-from-real-imag (real-part tee) (imag-part tee)))
+; PART OF TESTING :: (displayln (div (make-scheme-number 5) (make-complex-from-real-imag 1 5)))
+; PART OF TESTING :: 
+; PART OF TESTING :: (displayln (=zero? (make-scheme-number 0)))
+; PART OF TESTING :: (displayln (=zero? (make-complex-from-real-imag 3 2)))
+; PART OF TESTING :: (displayln (=zero? (make-rat 3 5)))
