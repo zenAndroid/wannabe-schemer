@@ -71,16 +71,20 @@
             (mul-terms (rest-of-terms term-list1) term-list2)))))
 
 ;; Let's see what I need now:
-;; same-variable?, variable? ==> for controlling the polynomial variables
-;; variable, term-list ==> for the polynomial
-;; make-poly           ==> for the polynomial
-;; first-term          ==> selects the first term out of a list of terms
 ;; order, coeff        ==> for the term
 ;; make-term           ==> for the term
 ;; empty-term-list?
 ;; the-empty-term-list
 
+;; Already implemented:
+;; make-poly           ==> for the polynomial
+;; variable, term-list ==> for the polynomial
+;; same-variable?, variable? ==> for controlling the polynomial variables
+;; first-term          ==> selects the first term out of a list of terms
+
 (define (install-polynomial-package op-table)
+
+  (define (tag x) (attach-tag 'polynomial))
 
   (define (make-poly variable term-list)
     (cons variable term-list))
@@ -101,3 +105,31 @@
     (and (variable? v1)
          (variable? v2)
          (eq? v1 v2)))
+
+  (define empty-term-list? (`ToDo))
+
+  (define the-empty-term-list (`ToDo))
+
+  (define make-term (`ToDo))
+
+  (define order (`ToDo))
+
+  (define coeff (`ToDo))
+
+  ;; ---------------------------------
+
+
+  (define first-op 
+    (put op-table 'make 'polynomial 
+         (lambda(polyvar poly-term-list) 
+           (tag (make-poly polyvar poly-term-list)))))
+
+  (define second-op
+    (put first-op 'add '(polynomial polynomial)
+         (lambda(pol1 pol2) (tag (add-polys pol1 pol2)))))
+
+  (define third-op
+    (put second-op 'mul '(polynomial polynomial)
+         (lambda(pol1 pol2) (tag (mul-polys pol1 pol2)))))
+
+  third-op)
