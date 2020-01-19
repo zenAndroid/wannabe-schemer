@@ -23,11 +23,11 @@
 
   (define (tag x) (attach-tag 'rectangular x))
 
-  ; (put 'real-part '(rectangular) real-part) 
+  ; (put 'real-part '(rectangular) real-part)
   ; becomes
   ; (put op-table 'real-part '(rectangular) real-part)
   ; Same thing for the other ones
-  ; 
+  ;
   ; /!\
   ;
   ; The above is a mistake, no side-effetcs remember?
@@ -41,23 +41,23 @@
   ; interpreter complained when i did something like `redefine a symbol`
   ; complaining about duplicate binding names
   ; so the variables are all temporary
-  ; so the result goes flowing down like 
+  ; so the result goes flowing down like
   ; a relay course
 
 
   (define first-op
     (put op-table 'real-part '(rectangular) real-part))
 
-  (define second-op 
+  (define second-op
     (put first-op 'imag-part '(rectangular) imag-part))
 
-  (define third-op 
+  (define third-op
     (put second-op 'magnitude '(rectangular) magnitude))
 
-  (define fourth-op 
+  (define fourth-op
     (put third-op 'angle '(rectangular) angle))
 
-  (define fifth-op 
+  (define fifth-op
     (put fourth-op 'make-from-real-imag 'rectangular
        (lambda (x y)
          (tag (make-from-real-imag x y)))))
@@ -67,7 +67,13 @@
        (lambda (r a)
          (tag (make-from-mag-ang r a)))))
 
-  sixth-op)
+  (define seventh-op
+    (put sixth-op 'negate '(rectangular)
+         (lambda (rA)
+           (tag (make-from-real-imag (- (real-part rA))
+                                     (- (imag-part rA)))))))
+
+  seventh-op)
 
 
 (define (make-from-real-imag x y)

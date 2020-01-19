@@ -1,6 +1,7 @@
 (require racket/trace)
 
 (define (install-rational-package op-table)
+
   (define (numer x) (car x))
 
   (define (denom x) (cdr x))
@@ -65,7 +66,11 @@
     (put eight-op '=zero? '(rational)
          (lambda(rat) (= (numer rat) 0))))
 
-  nineth-op)
+  (define tenth-op
+    (put nineth-op 'negate '(rational)
+         (lambda(pq) (tag (make-rat (numer pq) (- (denom pq)))))))
+
+  tenth-op)
 
 
 (define (numer x) (apply-generic 'numer x))

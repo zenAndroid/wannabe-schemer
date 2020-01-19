@@ -189,16 +189,8 @@
                     (list 2 0)
                     (list 1 (make-complex-from-real-imag 0 0))))
 
-(define zero-pol (make-poly 'y zero-list))
 
 (define pol (make-poly 'x term-lost))
 ;(make-poly 'x (list (list 3 5)
                     ;(list 2 (make-rat 3 4))
                     ;(list 1 (make-complex-from-real-imag 5 0))))
-(displayln pol)
-
-(displayln (add pol poly-example))
-
-(displayln zero-pol)
-
-(=zero? zero-pol)

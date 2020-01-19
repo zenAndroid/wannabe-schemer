@@ -27,7 +27,11 @@
   (define seventh-op 
     (put sixth-op '=zero? '(scheme-number)
          (lambda(x) (= 0 x))))
-  seventh-op)
+
+  (define eight-op
+    (put seventh-op 'negate '(scheme-number) -))
+
+  eight-op)
 
 (define (make-scheme-number n)
   ((get MAIN-TABLE 'make 'scheme-number) n))
