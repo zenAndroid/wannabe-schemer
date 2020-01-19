@@ -1,3 +1,5 @@
+#!/usr/bin/racket -f
+
 (require racket/include)
 
 (require racket/trace)
