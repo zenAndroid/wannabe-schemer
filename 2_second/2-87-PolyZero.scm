@@ -57,7 +57,7 @@
 
   (define (order term) (car term))
 
-  (trace-define (coeff term) (cadr term))
+  (define (coeff term) (cadr term))
 
   (define (append-terms term term-list)
     (if (=zero? (coeff term))
@@ -136,6 +136,25 @@
                 (variable poly)
                 (rest-of-terms (term-list poly)))))))
 
+  (trace-define (negate-polynomial poly)
+    ; The negation of a polynomial:
+    ;
+    ; - Has the seme variable
+    ; - The same degrees
+    ; - Tne coefficients get negated
+
+    ; Trying out the first strat that comes to mind
+    ; might be inefficient, but for a first try, i ll go with this.
+    ; Ill get the list of terms, then ill map a function that 
+    ; negates coefficients along that.
+    ; then ill make a polynomial with that.
+    (let ((negated-list (map (lambda(term) (make-term (order term)
+                                                      (negate (coeff term))))
+                             (term-list poly))))
+      (make-poly (variable poly)
+                 negated-list)))
+
+
   ;; ---------------------------------
 
 
@@ -153,10 +172,14 @@
          (lambda(pol1 pol2) (tag (mul-polys pol1 pol2)))))
 
   (define fourth-op
-    (put third-op '=zero? '(polynomial)
+    (put third-op 'negate '(polynomial)
+         (lambda(pol) (tag (negate-polynomial pol)))))
+
+  (define fifth-op
+    (put fourth-op '=zero? '(polynomial)
          (lambda(pol) (nil-polynomial pol))))
 
-  fourth-op)
+  fifth-op)
 
 
 ;; Exposing the functions to make polynomials

@@ -68,7 +68,7 @@
 
   (define tenth-op
     (put nineth-op 'negate '(rational)
-         (lambda(pq) (tag (make-rat (numer pq) (- (denom pq)))))))
+         (lambda(pq) (tag (make-rat (- (numer pq))  (denom pq))))))
 
   tenth-op)
 

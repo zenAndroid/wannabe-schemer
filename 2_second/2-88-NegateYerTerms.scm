@@ -14,3 +14,10 @@
 (=zero? zero-pol)
 
 (displayln (add rqt (negate rqt)))
+
+(displayln pol)
+(displayln "The negation of this polynomial is:")
+(displayln (negate pol))
+
+(define five (make-scheme-number 5))
+(displayln five)
