@@ -44,7 +44,12 @@
        (lambda (r a)
          (tag (make-from-mag-ang r a)))))
 
-  sixth-op)
+  (define seventh-op
+    (put sixth-op 'negate '(polar)
+         (lambda(mA) (tag (make-from-mag-ang
+                            (magnitude mA)
+                            (+ (angle mA) pi))))))
+  seventh-op)
 
 (define (make-from-mag-ang r a)
   ((get MAIN-TABLE 'make-from-mag-ang 'polar) r a))
