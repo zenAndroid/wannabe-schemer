@@ -136,7 +136,7 @@
                 (variable poly)
                 (rest-of-terms (term-list poly)))))))
 
-  (trace-define (negate-polynomial poly)
+  (define (negate-polynomial poly)
     ; The negation of a polynomial:
     ;
     ; - Has the seme variable
@@ -172,14 +172,18 @@
          (lambda(pol1 pol2) (tag (mul-polys pol1 pol2)))))
 
   (define fourth-op
-    (put third-op 'negate '(polynomial)
-         (lambda(pol) (tag (negate-polynomial pol)))))
+    (put third-op 'sub '(polynomial polynomial)
+         (lambda(pol1 pol2) (tag (add-polys pol1 (negate-polynomial pol2))))))
 
   (define fifth-op
-    (put fourth-op '=zero? '(polynomial)
+    (put fourth-op 'negate '(polynomial)
+         (trace-lambda(pol) (tag (negate-polynomial pol)))))
+
+  (define sixth-op
+    (put fifth-op '=zero? '(polynomial)
          (lambda(pol) (nil-polynomial pol))))
 
-  fifth-op)
+  sixth-op)
 
 
 ;; Exposing the functions to make polynomials

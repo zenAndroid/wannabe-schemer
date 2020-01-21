@@ -1,3 +1,4 @@
+#! /usr/bin/racket -f
 (require racket/trace)
 (require racket/include)
 
@@ -21,3 +22,5 @@
 
 (define five (make-scheme-number 5))
 (displayln five)
+
+(displayln (sub pol pol))
