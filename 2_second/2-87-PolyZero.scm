@@ -53,11 +53,11 @@
 
   (define the-empty-term-list '())
 
-  (define (make-term order coeff) (list order coeff))
+  (trace-define (make-term order coeff) (list order coeff))
 
-  (define (order term) (car term))
+  (trace-define (order term) (car term))
 
-  (define (coeff term) (cadr term))
+  (trace-define (coeff term) (cadr term))
 
   (define (append-terms term term-list)
     (if (=zero? (coeff term))
@@ -85,13 +85,13 @@
             (term-list P2)))
         (error "Polynomials not in same variable " (list P1 P2))))
 
-  (define (div-polys P1 P2)
+  (trace-define (div-polys P1 P2)
     (if (same-variable? (variable P1) (variable P2))
       (let ((result-meta-list (div-terms (term-list P1) (term-list P2))))
         (let ((div-quotient (car result-meta-list))
               (div-remainder (cadr result-meta-list)))
-          (list div-quotient div-remainder))))
-    (error "POLYS NOT IN SAME VARIABLE" (list P1 P2)))
+          (list div-quotient div-remainder)))
+      (error "POLYNOMIALS NOT IN SAME VARIABLE" (list P1 P2))))
  
   ;; Adding two polynomial term lists
  
@@ -125,7 +125,7 @@
               (mul-terms (rest-of-terms term-list1) term-list2)))))
 
 
-  (define (mul-by-all-terms term term-list)
+  (trace-define (mul-by-all-terms term term-list)
     (if (empty-term-list? term-list)
         ('())
         (append-terms
@@ -134,18 +134,15 @@
             (mul (coeff t1) (coeff (first-term term-list))))
           (mul-terms term (rest-of-terms term-list)))))
 
-  (define (div-terms L1 L2)
+  (trace-define (div-terms L1 L2)
     (if (empty-term-list? L1)
-        (list (the-empty-termlist)
-              (the-empty-termlist))
+        (list (the-empty-termlist) (the-empty-termlist))
         (let ((t1 (first-term L1))
               (t2 (first-term L2)))
           (if (> (order t2) (order t1))
               (list (the-empty-termlist) L1)
-              (let ((new-c (div (coeff t1)
-                                (coeff t2)))
-                    (new-o (- (order t1)
-                              (order t2))))
+              (let ((new-c (div (coeff t1) (coeff t2)))
+                    (new-o (- (order t1) (order t2))))
                 (let ((rest-of-result (div-terms (sub L1 
                                                       (mul-by-all-terms (make-term new-o new-c) L2)) 
                                                  L2)))
@@ -201,14 +198,18 @@
          (lambda(pol1 pol2) (tag (add-polys pol1 (negate-polynomial pol2))))))
 
   (define fifth-op
-    (put fourth-op 'negate '(polynomial)
-         (trace-lambda(pol) (tag (negate-polynomial pol)))))
+    (put fourth-op 'div '(polynomial polynomial)
+         (lambda (pol1 pol2) (tag (div-polys pol1 pol2)))))
 
   (define sixth-op
-    (put fifth-op '=zero? '(polynomial)
+    (put fifth-op 'negate '(polynomial)
+         (trace-lambda(pol) (tag (negate-polynomial pol)))))
+
+  (define seventh-op
+    (put sixth-op '=zero? '(polynomial)
          (lambda(pol) (nil-polynomial pol))))
 
-  sixth-op)
+  seventh-op)
 
 
 ;; Exposing the functions to make polynomials
@@ -220,29 +221,29 @@
 
 ; (map displayln MAIN-TABLE)
 
-(define poly-example
-  (make-poly 'x '((7 2) (5 -4) (2 3) (1 1) (0 7))))
-
-(define p
-  (make-poly 'x '((4 2) (2 4) (0 1))))
-
-; (map displayln (list p poly-example))
+; (define poly-example
+;   (make-poly 'x '((7 2) (5 -4) (2 3) (1 1) (0 7))))
 ; 
-; (displayln (add p poly-example))
-
-(define complex (make-complex-from-real-imag 8 7))
-(define rqt (make-rat 7 8))
-
-(define t1 (list 3 complex))
-(define t2 (list 1 rqt))
-(define term-lost (list t1 t2))
-(define zero-list (list
-                    (list 3 (make-rat 0 2))
-                    (list 2 0)
-                    (list 1 (make-complex-from-real-imag 0 0))))
-
-
-(define pol (make-poly 'x term-lost))
+; (define p
+;   (make-poly 'x '((4 2) (2 4) (0 1))))
+; 
+; ; (map displayln (list p poly-example))
+; ; 
+; ; (displayln (add p poly-example))
+; 
+; (define complex (make-complex-from-real-imag 8 7))
+; (define rqt (make-rat 7 8))
+; 
+; (define t1 (list 3 complex))
+; (define t2 (list 1 rqt))
+; (define term-lost (list t1 t2))
+; (define zero-list (list
+;                     (list 3 (make-rat 0 2))
+;                     (list 2 0)
+;                     (list 1 (make-complex-from-real-imag 0 0))))
+; 
+; 
+; (define pol (make-poly 'x term-lost))
 ;(make-poly 'x (list (list 3 5)
                     ;(list 2 (make-rat 3 4))
                     ;(list 1 (make-complex-from-real-imag 5 0))))
