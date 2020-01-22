@@ -2,17 +2,17 @@
 
 (require racket/trace)
 
-(include "2-80-basicDefinitions.scm")
+(include "80-basicDefinitions.scm")
 
-(include "2-80-sch-num.scm")
+(include "80-sch-num.scm")
 
-(include "2-80-rat.scm")
+(include "80-rat.scm")
 
-(include "2-80-rect.scm")
+(include "80-rect.scm")
 
-(include "2-80-polar.scm")
+(include "80-polar.scm")
 
-(include "2-80-complex.scm")
+(include "80-complex.scm")
 
 
 ; installing the packages

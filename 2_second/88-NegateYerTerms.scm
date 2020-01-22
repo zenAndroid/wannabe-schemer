@@ -2,7 +2,7 @@
 (require racket/trace)
 (require racket/include)
 
-(include "2-87-PolyZero.scm")
+(include "87-PolyZero.scm")
 
 ; (define zero-pol (make-poly 'y zero-list))
 ; 
