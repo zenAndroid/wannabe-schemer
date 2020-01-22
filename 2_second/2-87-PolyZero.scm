@@ -84,6 +84,14 @@
             (term-list P1)
             (term-list P2)))
         (error "Polynomials not in same variable " (list P1 P2))))
+
+  (define (div-polys P1 P2)
+    (if (same-variable? (variable P1) (variable P2))
+      (let ((result-meta-list (div-terms (term-list P1) (term-list P2))))
+        (let ((div-quotient (car result-meta-list))
+              (div-remainder (cadr result-meta-list)))
+          (list div-quotient div-remainder))))
+    (error "POLYS NOT IN SAME VARIABLE" (list P1 P2)))
  
   ;; Adding two polynomial term lists
  
@@ -125,6 +133,23 @@
             (+ (order term) (order (first-term term-list)))
             (mul (coeff t1) (coeff (first-term term-list))))
           (mul-terms term (rest-of-terms term-list)))))
+
+  (define (div-terms L1 L2)
+    (if (empty-term-list? L1)
+        (list (the-empty-termlist)
+              (the-empty-termlist))
+        (let ((t1 (first-term L1))
+              (t2 (first-term L2)))
+          (if (> (order t2) (order t1))
+              (list (the-empty-termlist) L1)
+              (let ((new-c (div (coeff t1)
+                                (coeff t2)))
+                    (new-o (- (order t1)
+                              (order t2))))
+                (let ((rest-of-result (div-terms (sub L1 
+                                                      (mul-by-all-terms (make-term new-o new-c) L2)) 
+                                                 L2)))
+                  (list (append-terms (make-term new-o new-c) (car rest-of-result)) (cadr rest-of-result))))))))
 
   (define (nil-polynomial poly)
     (cond ((empty-term-list? (term-list poly)) #t)
