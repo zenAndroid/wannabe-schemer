@@ -2,8 +2,6 @@
 (require racket/include)
 (require racket/trace)
 
-
-
 (include "2-88-NegateYerTerms.scm")
 
 (define dividend-terms-list (list
@@ -22,5 +20,7 @@
 (display divisor)
 (newline)
 
-(trace sub)
-(display (div dividend divisor))
+(trace div)
+(define foobar (div dividend divisor))
+(display foobar)
+(newline)

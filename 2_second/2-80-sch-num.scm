@@ -16,7 +16,7 @@
 
   (define fourth-op
     (put third-op 'div '(scheme-number scheme-number)
-         (lambda (x y) (tag (remainder x y)))))
+         (lambda (x y) (tag (/ x y)))))
 
   (define fifth-op
     (put fourth-op 'make 'scheme-number
