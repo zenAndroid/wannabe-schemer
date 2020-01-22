@@ -1,5 +1,5 @@
-#!/usr/bin/racket -f
 (require racket/include)
+
 (require racket/trace)
 
 (include "88-NegateYerTerms.scm")
@@ -20,7 +20,6 @@
 (display divisor)
 (newline)
 
-(trace div)
 (define foobar (div dividend divisor))
 (display foobar)
 (newline)

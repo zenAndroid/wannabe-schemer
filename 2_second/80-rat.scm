@@ -6,7 +6,9 @@
 
   (define (denom x) (cdr x))
 
-  (define (make-rat n d) (cons n d)) 
+  (define (make-rat n d) (cons 
+                           (div n (custom-gcd n d))
+                           (div d (custom-gcd n d)))) 
 
   (define (add-rat x y)
     (make-rat (add (mul (numer x) (denom y))

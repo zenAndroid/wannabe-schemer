@@ -73,3 +73,4 @@
 (define (negate x) (apply-generic 'negate x))
 (define (equ? x y) (apply-generic 'equ? x y))
 (define (=zero? x) (apply-generic '=zero? x))
+(define (custom-gcd x y) (apply-generic 'gcd x y))

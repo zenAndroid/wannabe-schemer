@@ -1,5 +1,5 @@
-#! /usr/bin/racket -f
 (require racket/trace)
+
 (require racket/include)
 
 (include "87-PolyZero.scm")

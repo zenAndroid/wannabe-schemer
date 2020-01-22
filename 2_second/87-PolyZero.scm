@@ -1,5 +1,3 @@
-#!/usr/bin/racket -f
-
 (require racket/include)
 
 (require racket/trace)
@@ -22,10 +20,10 @@
 ;; the-empty-term-list
 
 ;; Already implemented:
-;; make-poly           ==> for the polynomial
-;; variable, term-list ==> for the polynomial
+;; make-poly                 ==> for the polynomial
+;; variable, term-list       ==> for the polynomial
 ;; same-variable?, variable? ==> for controlling the polynomial variables
-;; first-term          ==> selects the first term out of a list of terms
+;; first-term                ==> selects the first term out of a list of terms
 
 (define (install-polynomial-package op-table)
 
@@ -64,53 +62,68 @@
         term-list
         (cons term term-list)))
 
+  (define (gcd-terms a b)
+    (if (empty-term-list? b)
+      a
+      (gcd-terms b (remainder-terms a b))))
+
   (define (negate-term term)
-    (make-term (order term) (negate (coeff term))))
+    (make-term
+      (order term)
+      (negate (coeff term))))
 
   (define (negate-termlist L)
     (if (empty-term-list? L)
-	L
-	(append-terms (negate-term (first-term L))
-                      (negate-termlist (rest-of-terms L)))))
+      L
+      (append-terms (negate-term (first-term L))
+                    (negate-termlist (rest-of-terms L)))))
 
   (define (sub-terms L1 L2)
     (add-terms L1 (negate-termlist L2)))
 
+  (define (remainder-terms L1 L2)
+    (cadr (div-terms L1 L2)))
+
+  (define (gcd-polys P1 P2)
+    (if (same-variable? (variable P2) (variable P1))
+      (let ((gcd-term-list (gcd-terms (term-list P1) (term-list P2))))
+        (make-poly (variable P1) gcd-term-list))
+      (error "Polynomials not in same variable ! -- GCD-POLYS" (list P1 P2))))
   ;; Adding two polynomials
 
-  (define (add-polys P1 P2)
+  (define (add-polys P1 P2);{{{
     (if (same-variable? (variable P1) (variable P2))
         (make-poly
           (variable P1)
           (add-terms
             (term-list P1)
             (term-list P2)))
-        (error "Polynomials not in same variable " (list P1 P2))))
+        (error "Polynomials not in same variable " (list P1 P2))));}}}
 
   ;; Multiplying two polynomials
 
-  (define (mul-polys P1 P2)
+  (define (mul-polys P1 P2);{{{
     (if (same-variable? (variable P1) (variable P2))
         (make-poly
           (variable P1)
           (mul-terms
             (term-list P1)
             (term-list P2)))
-        (error "Polynomials not in same variable " (list P1 P2))))
+        (error "Polynomials not in same variable " (list P1 P2))));}}}
 
-  (trace-define (div-polys P1 P2)
+  (define (div-polys P1 P2);{{{
     (if (same-variable? (variable P1) (variable P2))
       (let ((result-meta-list (div-terms (term-list P1) (term-list P2))))
         (let ((div-quotient (car result-meta-list))
               (div-remainder (cadr result-meta-list)))
-          (list 
+          (list
             (make-poly (variable P1) div-quotient)
             (make-poly (variable P1) div-remainder))))
-      (error "POLYNOMIALS NOT IN SAME VARIABLE" (list P1 P2))))
+      (error "POLYNOMIALS NOT IN SAME VARIABLE" (list P1 P2))));}}}
 
   ;; Adding two polynomial term lists
 
-  (define (add-terms term-list1 term-list2)
+  (define (add-terms term-list1 term-list2);{{{
     (cond ((empty-term-list? term-list1) term-list2)
           ((empty-term-list? term-list2) term-list1)
           (else
@@ -126,21 +139,20 @@
                       (append-terms (make-term (order t1) (add (coeff t1) (coeff t2)))
                                     (add-terms
                                       (rest-of-terms term-list1)
-                                      (rest-of-terms term-list2)))))))))
+                                      (rest-of-terms term-list2)))))))));}}}
 
 
   ;; Multiplying two polynomial term lists.
 
-  (define (mul-terms term-list1 term-list2)
+  (define (mul-terms term-list1 term-list2);{{{
     (cond ((empty-term-list? term-list1)
            (the-empty-term-list))
           (else
             (add-terms
               (mul-by-all-terms (first-term term-list1) term-list2)
-              (mul-terms (rest-of-terms term-list1) term-list2)))))
+              (mul-terms (rest-of-terms term-list1) term-list2)))));}}}
 
-
-  (trace-define (mul-by-all-terms term term-list);{{{
+  (define (mul-by-all-terms term term-list);{{{
     (if (empty-term-list? term-list)
         ;(the-empty-term-list)
         (the-empty-term-list)
@@ -150,7 +162,7 @@
             (mul (coeff term) (coeff (first-term term-list))))
           (mul-by-all-terms term (rest-of-terms term-list)))));}}}
 
-  (trace-define (div-terms L1 L2);{{{
+  (define (div-terms L1 L2);{{{
     (if (empty-term-list? L1)
         (list (the-empty-term-list) (the-empty-term-list))
         (let ((t1 (first-term L1))
@@ -226,7 +238,11 @@
     (put sixth-op '=zero? '(polynomial)
          (lambda(pol) (nil-polynomial pol))))
 
-  seventh-op)
+  (define eigth-op
+    (put seventh-op 'gcd '(polynomial polynomial)
+         (lambda(pol1 pol2) (tag (gcd-polys pol1 pol2)))))
+
+  eigth-op)
 
 
 ;; Exposing the functions to make polynomials

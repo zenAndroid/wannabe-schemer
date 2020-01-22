@@ -1,6 +1,11 @@
 (define (install-scheme-number-package op-table)
 
   (define (tag x) (attach-tag 'scheme-number x))
+
+  (define (scheme-number-gcd a b)
+    (if (= b 0)
+      a
+      (scheme-number-gcd b (remainder a b))))
   
   (define first-op
     (put op-table 'add '(scheme-number scheme-number)
@@ -31,7 +36,11 @@
   (define eight-op
     (put seventh-op 'negate '(scheme-number) -))
 
-  eight-op)
+  (define ninth-op
+    (put eight-op 'gcd '(scheme-number scheme-number)
+         scheme-number-gcd))
+
+  ninth-op)
 
 (define (make-scheme-number n)
   ((get MAIN-TABLE 'make 'scheme-number) n))
