@@ -20,4 +20,4 @@
 
 (define Q2 (mul first-poly third-poly))
 
-(custom-gcd Q1 Q2)
+; (custom-gcd Q1 Q2)

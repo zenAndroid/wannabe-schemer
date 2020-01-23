@@ -65,7 +65,7 @@
   (define (gcd-terms a b)
     (if (empty-term-list? b)
       a
-      (gcd-terms b (remainder-terms a b))))
+      (gcd-terms b (pseudoremainder-terms a b))))
 
   (define (negate-term term)
     (make-term
@@ -84,12 +84,22 @@
   (define (remainder-terms L1 L2)
     (cadr (div-terms L1 L2)))
 
+  (define (pseudoremainder-terms L1 L2)
+    (let ((order-l1 (order (first-term L1)))
+          (order-l2 (order (first-term L2)))
+          (leading-coeff (coeff (first-term L2))))
+      (let ((integerizer (expt
+                           leading-coeff
+                           (- (+ 1 order-l1) order-l2))))
+        (let ((new-dividend (mul-by-all-terms (make-term 0 integerizer) L1)))
+          (cadr (div-terms new-dividend L2))))))
+
   (define (gcd-polys P1 P2)
     (if (same-variable? (variable P2) (variable P1))
       (let ((gcd-term-list (gcd-terms (term-list P1) (term-list P2))))
         (make-poly (variable P1) gcd-term-list))
       (error "Polynomials not in same variable ! -- GCD-POLYS" (list P1 P2))))
-  ;; Adding two polynomials
+
 
   (define (add-polys P1 P2);{{{
     (if (same-variable? (variable P1) (variable P2))
@@ -99,8 +109,6 @@
             (term-list P1)
             (term-list P2)))
         (error "Polynomials not in same variable " (list P1 P2))));}}}
-
-  ;; Multiplying two polynomials
 
   (define (mul-polys P1 P2);{{{
     (if (same-variable? (variable P1) (variable P2))
@@ -121,8 +129,6 @@
             (make-poly (variable P1) div-remainder))))
       (error "POLYNOMIALS NOT IN SAME VARIABLE" (list P1 P2))));}}}
 
-  ;; Adding two polynomial term lists
-
   (define (add-terms term-list1 term-list2);{{{
     (cond ((empty-term-list? term-list1) term-list2)
           ((empty-term-list? term-list2) term-list1)
@@ -140,9 +146,6 @@
                                     (add-terms
                                       (rest-of-terms term-list1)
                                       (rest-of-terms term-list2)))))))));}}}
-
-
-  ;; Multiplying two polynomial term lists.
 
   (define (mul-terms term-list1 term-list2);{{{
     (cond ((empty-term-list? term-list1)
@@ -205,9 +208,7 @@
       (make-poly (variable poly)
                  negated-list)));}}}
 
-
   ;; ---------------------------------
-
 
   (define first-op
     (put op-table 'make 'polynomial
