@@ -1,6 +1,5 @@
 (include "94-GCD-Terms.scm")
 
-
 (define first-poly
   (make-poly
     'x
@@ -21,3 +20,5 @@
 (define Q2 (mul first-poly third-poly))
 
 ; (custom-gcd Q1 Q2)
+
+(custom-gcd Q1 Q2)

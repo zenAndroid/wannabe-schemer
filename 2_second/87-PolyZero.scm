@@ -63,8 +63,13 @@
         (cons term term-list)))
 
   (define (gcd-terms a b)
+    (define (simplify-terms L)
+      (let ((gcd-coeff (apply gcd (map coeff L))))
+        (let ((new-terms (map (lambda(term) (make-term (order term) (/ (coeff term) gcd-coeff))) L)))
+          new-terms)))
+            
     (if (empty-term-list? b)
-      a
+      (simplify-terms a)
       (gcd-terms b (pseudoremainder-terms a b))))
 
   (define (negate-term term)
