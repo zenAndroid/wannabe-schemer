@@ -232,7 +232,7 @@
 
   (define sixth-op
     (put fifth-op 'negate '(polynomial)
-         (trace-lambda(pol) (tag (negate-polynomial pol)))))
+         (lambda(pol) (tag (negate-polynomial pol)))))
 
   (define seventh-op
     (put sixth-op '=zero? '(polynomial)
@@ -251,7 +251,6 @@
   ((get MAIN-TABLE 'make 'polynomial) variable term-list))
 
 (define MAIN-TABLE (install-polynomial-package MAIN-TABLE))
-(trace div)
 
 ; (map displayln MAIN-TABLE)
 

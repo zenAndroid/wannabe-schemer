@@ -15,11 +15,11 @@
 (define dividend (make-poly 'x dividend-terms-list))
 (define divisor (make-poly 'x divisor-terms-list))
 
-(display dividend)
-(newline)
-(display divisor)
-(newline)
+; (display dividend)
+; (newline)
+; (display divisor)
+; (newline)
 
 (define foobar (div dividend divisor))
-(display foobar)
-(newline)
+; (display foobar)
+; (newline)
