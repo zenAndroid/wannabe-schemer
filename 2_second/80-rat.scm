@@ -4,20 +4,24 @@
 
   (define (numer x) (car x))
 
-  (define (denom x) (cdr x))
+  (define (denom x) (cadr x))
 
-  (define (make-rat n d) (cons 
-                           (div n (custom-gcd n d))
-                           (div d (custom-gcd n d)))) 
+  ; (define (make-rat n d) (cons 
+  ;                          (let ((reduced-n-d (reduce n d)))
+  ;                            (div n (custom-gcd (car reduced-n-d) (cadr reduced-n-d)))
+  ;                            (div d (custom-gcd (car reduced-n-d) (cadr reduced-n-d)))))) 
+   (define (make-rat n d) (list 
+                              (div n (custom-gcd n d))
+                              (div d (custom-gcd n d))))
 
   (define (add-rat x y)
     (make-rat (add (mul (numer x) (denom y))
-                 (mul (numer y) (denom x))) 
+                   (mul (numer y) (denom x))) 
               (mul (denom x) (denom y))))
 
   (define (sub-rat x y)
     (make-rat (sub (mul (numer x) (denom y))
-                 (mul (numer y) (denom x)))
+                   (mul (numer y) (denom x)))
               (mul (denom x) (denom y))))
 
   (define (mul-rat x y)
@@ -52,32 +56,38 @@
     (put fourth-op 'make 'rational
          (lambda(n d) (tag (make-rat n d)))))
 
-  (define sixth-op
-    (put fifth-op 'numer '(rational) (lambda(x) (numer x))))
-
-  (define seventh-op
-    (put sixth-op 'denom '(rational) (lambda(x) (denom x))))
-
-  (define eight-op 
-    (put seventh-op 'equ? '(rational rational)
+  (define sixth-op 
+    (put fifth-op 'equ? '(rational rational)
          (lambda(x y) 
            (= (* (numer x) (denom y))
               (* (denom x) (numer y))))))
 
-  (define nineth-op 
-    (put eight-op '=zero? '(rational)
+  (define seventh-op 
+    (put sixth-op '=zero? '(rational)
          (lambda(rat) (= (numer rat) 0))))
 
-  (define tenth-op
-    (put nineth-op 'negate '(rational)
+  (define eighth-op
+    (put seventh-op 'negate '(rational)
          (lambda(pq) (tag (make-rat (- (numer pq))  (denom pq))))))
 
-  tenth-op)
+  ; 2020-01-24 00:16 :: zenAndroid Hmmm ... just as i close this chapter im struck with 
+  ; this realization that this a handy shortcut better than that god-awful nth-op nonsense
+  ; 
+  ; Still not ideal, but light years better, if you want to add a new op all you have to do is add
+  ; a line at the beginning and one at the end.
+  ;
+  ; My brain does not like me very much ... :thinking:
+  ; 
+  ; (define foo
+  ;   (put
+  ;     (put
+  ;       (put
+  ;         (put MAIN-TABLE 'foo 'bar +)
+  ;         'bar 'foo -)
+  ;       'fii 'bor *))
+  ;   'faa 'quux /)
 
-
-(define (numer x) (apply-generic 'numer x))
-
-(define (denom x) (apply-generic 'denom x))
+  eighth-op)
 
 (define (make-rat n d)
   ((get MAIN-TABLE 'make 'rational) n d))

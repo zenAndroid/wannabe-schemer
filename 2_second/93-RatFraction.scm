@@ -1,5 +1,3 @@
-#! /usr/bin/racket -f
-
 ;; Alright, i'll be delving into the rational package now
 
 ;; 2020-01-22 12:52 :: zenAndroid 

@@ -10,6 +10,8 @@
   (make-poly
    'x '((3 1) (1 -1))))
 
-(custom-gcd p1 p2)
+(display (custom-gcd p1 p2))
+
+(newline)
 
 

@@ -30,7 +30,9 @@
   (define (tag x) (attach-tag 'polynomial x))
 
   (define (make-poly variable term-list)
-    (cons variable term-list))
+    (if (empty-term-list? term-list)
+      (the-empty-term-list)
+      (cons variable term-list)))
 
   (define (variable poly) (car poly))
 
@@ -62,15 +64,44 @@
         term-list
         (cons term term-list)))
 
+  (define (simplify-terms L)
+    (let ((gcd-coeff (apply gcd (map coeff L))))
+      (let ((new-terms (map (lambda(term) (make-term (order term) (/ (coeff term) gcd-coeff))) L)))
+        new-terms)))
+
   (define (gcd-terms a b)
-    (define (simplify-terms L)
-      (let ((gcd-coeff (apply gcd (map coeff L))))
-        (let ((new-terms (map (lambda(term) (make-term (order term) (/ (coeff term) gcd-coeff))) L)))
-          new-terms)))
-            
     (if (empty-term-list? b)
       (simplify-terms a)
       (gcd-terms b (pseudoremainder-terms a b))))
+
+  (define (reduce-terms n d) ; Intentionally went overboard with the let constructs!
+    (let ((num-denom-gcd (gcd-terms n d)))
+      (let ((gcds-first-term (first-term num-denom-gcd))
+            (num-first-term (first-term n))
+            (denom-first-term (first-term d)))
+        (let ((leading-coeff (coeff gcds-first-term))
+              (O-1 (max (order num-first-term) (order denom-first-term)))
+              (O-2 (order gcds-first-term)))
+          (let ((factor (expt
+                          leading-coeff
+                          (- (+ 1 O-1) O-2))))
+            (let ((new-num (mul-by-all-terms (make-term 0 factor) n))
+                  (new-denom (mul-by-all-terms (make-term 0 factor) d)))
+              (list (simplify-terms new-num) (simplify-terms new-denom))))))))
+
+  (define (reduce-poly num-pol denom-pol)
+    (if (same-variable? (variable num-pol)
+                        (variable denom-pol))
+      (let ((reduced-lists (reduce-terms
+                             (term-list num-pol)
+                             (term-list denom-pol))))
+        (let ((reduced-num-list (car reduced-lists))
+              (reduced-denom-list (cadr reduced-lists)))
+          (let ((reduced-num (make-poly (variable num-pol) reduced-num-list))
+                (reduced-denom (make-poly (variable num-pol) reduced-denom-list)))
+            (list reduced-num reduced-denom))))
+      (error "polys not in same variable -- reduce poly" (list num-pol denom-pol))))
+
 
   (define (negate-term term)
     (make-term
@@ -115,7 +146,7 @@
             (term-list P2)))
         (error "Polynomials not in same variable " (list P1 P2))));}}}
 
-  (define (mul-polys P1 P2);{{{
+  (trace-define (mul-polys P1 P2);{{{
     (if (same-variable? (variable P1) (variable P2))
         (make-poly
           (variable P1)
@@ -234,7 +265,10 @@
 
   (define fifth-op
     (put fourth-op 'div '(polynomial polynomial)
-         (lambda (pol1 pol2) (tag (div-polys pol1 pol2)))))
+         (lambda (p1 p2)
+           (let ((result (div-polys p1 p2)))
+                 (list (tag (car result))
+                       (tag (cadr result)))))))
 
   (define sixth-op
     (put fifth-op 'negate '(polynomial)
@@ -248,8 +282,11 @@
     (put seventh-op 'gcd '(polynomial polynomial)
          (lambda(pol1 pol2) (tag (gcd-polys pol1 pol2)))))
 
-  eigth-op)
+  (define ninth-op
+    (put eigth-op 'reduce '(polynomial polynomial)
+         (lambda(pol1 pol2) (reduce-poly pol1 pol1))))
 
+  ninth-op)
 
 ;; Exposing the functions to make polynomials
 

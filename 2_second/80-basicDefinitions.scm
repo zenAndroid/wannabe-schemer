@@ -19,7 +19,7 @@
       contents
       (cons type-tag contents)))
 
-(define (type-tag datum)
+(trace-define (type-tag datum)
   (cond ((number? datum) 'scheme-number)
         ((pair? datum) (car datum))
         (else (error "Bad tagged datum: TYPE-TAG" datum))))
@@ -43,7 +43,7 @@
 ;              APPLY-GENERIC"
 ;             (list op type-tags))))))
 
-(define (apply-generic op . args)
+(trace-define (apply-generic op . args)
   (let ((type-tags (map type-tag args)))
     (let ((proc (get MAIN-TABLE op type-tags)))
       (if proc
@@ -74,3 +74,4 @@
 (define (equ? x y) (apply-generic 'equ? x y))
 (define (=zero? x) (apply-generic '=zero? x))
 (define (custom-gcd x y) (apply-generic 'gcd x y))
+(define (reduce x y) (apply-generic 'reduce x y))

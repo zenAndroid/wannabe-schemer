@@ -4,8 +4,12 @@
 
   (define (scheme-number-gcd a b)
     (if (= b 0)
-      a
+      (abs a)
       (scheme-number-gcd b (remainder a b))))
+  
+  (define (reduce-integers n d)
+    (list (/ n (gcd n d)) (/ d (gcd n d))))
+
   
   (define first-op
     (put op-table 'add '(scheme-number scheme-number)
@@ -40,7 +44,11 @@
     (put eight-op 'gcd '(scheme-number scheme-number)
          scheme-number-gcd))
 
-  ninth-op)
+  (define tenth-op
+    (put ninth-op 'reduce '(scheme-number scheme-number)
+         reduce-integers))
+
+  tenth-op)
 
 (define (make-scheme-number n)
   ((get MAIN-TABLE 'make 'scheme-number) n))
