@@ -1,8 +1,8 @@
 # Scheming
-
+![Structure and Interpretation of Computer Programs](SICP.jpg "SICP banner")
 Working through Structure and Interpretation of Computer Programs.
 
-This repo is noe=w being simultaneasly posted to [GitLab](https://gitlab.com/zenAndroid/scheming-sicp)and [GitHub](https://github.com/zenAndroid/wannabe-schemer).
+This repo is noe=w being simultaneasly posted to [GitLab](https://gitlab.com/zenAndroid/scheming-sicp) and [GitHub](https://github.com/zenAndroid/wannabe-schemer).
 Occasionally jotting down my thoughts about the material.
 
 Using vim, when i get stuck i go to DrRacket.
