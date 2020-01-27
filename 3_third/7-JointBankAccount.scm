@@ -32,5 +32,25 @@
 
 
 
-
 (define (make-joint original-account account-password password)
+  (cond ((not ((original-account 'verify-pass) account-password)) (error "Incorrect password !"))
+        ; At this point, we have the right password
+        ; (define paul-acc
+        ;   (make-joint mary-acc 'marypass 'paulpass))
+        ; 
+        ; So the access to paul would be normally done with 
+        ; ((paul-acc 'paulpass 'withdraw) 50)
+        ; This tells me the ordering of the arguments to use in the lambda definition.
+        (else 
+          (lambda(joint-pass operation)
+            (let ((correct-pass? (eq? joint-pass password)))
+              (cond ((not (correct-pass?))
+                     (error "Incorrect password"))
+                    (else ; We have the correct password
+                      (cond ((eq? operation 'withdraw)
+                             (original-account account-password 'withdraw))
+                            ((eq? operation 'deposit)
+                             (original-account account-password 'deposit))))))))))
+
+
+(define zen-acc (make-account 'zenandroid 1000))
