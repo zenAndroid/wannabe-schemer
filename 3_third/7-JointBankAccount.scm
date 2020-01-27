@@ -22,7 +22,7 @@
           ((eq? m 'deposit) 
            (lambda (arg) (deposit input-pass arg)))
           ((eq? m 'verify-pass)
-           (lambda(pass-attempt) (eq? pass-attempt pass)))
+           (lambda() (eq? input-pass pass)))
           (else (error "Unknown request: 
                  MAKE-ACCOUNT" m))))
 
@@ -33,7 +33,7 @@
 
 
 (define (make-joint original-account account-password password)
-  (cond ((not ((original-account 'verify-pass) account-password)) (error "Incorrect password !"))
+  (cond ((not (original-account 'verify-pass account-password) (error "Incorrect password !"))
         ; At this point, we have the right password
         ; (define paul-acc
         ;   (make-joint mary-acc 'marypass 'paulpass))
@@ -54,3 +54,6 @@
 
 
 (define zen-acc (make-account 'zenandroid 1000))
+
+(define zen-joint
+  (make-joint zen-acc 'zenandroid 'jointpass))
