@@ -28,28 +28,9 @@
 
   dispatch)
 
-; 
-; > (define acc (make-account 'zenandroid 1000))
-; > acc
-; #<procedure:dispatch>
-; > ((acc 'zenandroid 'withdraw) 345)
-; 655
-; > ((acc 'zenandrid 'withdraw) 345)
-; "Incorrect password"
-; > ((acc 'zenandroid 'withdraw) 345)
-; 310
-; > ((acc 'zenandroid 'withdraw) 345)
-; "Insufficient funds"
-; > ((acc 'zenandroid 'withdraw) 345)
-; "Insufficient funds"
-; > ((acc 'zenandroid 'withdraw) 35)
-; 275
-; > ((acc 'zenandroid 'withdraw) 3533)
-; "Insufficient funds"
-; > ((acc 'zenandroid 'deposit) 3533)
-; 3808
-; > ((acc 'zendroid 'deposit) 3533)
-; "Incorrect password"
 
 
-; Seems to be acting as expected.
+
+
+
+(define (make-joint original-account account-password password)
