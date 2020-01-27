@@ -1,6 +1,9 @@
-(define (make-account pass balance)
+(require racket/trace)
+
+
+(trace-define (make-account pass balance)
   
-  (define (withdraw in-pass amount)
+  (trace-define (withdraw in-pass amount)
     (let ((correct-pass? (eq? in-pass pass))
           (gotEnuf-money? (>= balance amount)))
       (cond ((not correct-pass?) "Incorrect password")
@@ -9,14 +12,14 @@
               (begin (set! balance (- balance amount))
                      balance)))))
 
-  (define (deposit in-pass amount)
+  (trace-define (deposit in-pass amount)
     (let ((correct-pass? (eq? in-pass pass)))
       (cond ((not correct-pass?) "Incorrect password")
             (else ; Correct password
               (begin (set! balance (+ balance amount))
                      balance)))))
 
-  (define (dispatch input-pass m)
+  (trace-define (dispatch input-pass m)
     (cond ((eq? m 'withdraw) 
            (lambda (arg) (withdraw input-pass arg)))
           ((eq? m 'deposit) 
@@ -32,17 +35,17 @@
 
 
 
-(define (make-joint original-account account-password password)
-  (cond ((not (original-account 'verify-pass account-password) (error "Incorrect password !"))
+(trace-trace-define (make-joint original-account account-password password)
+  (cond ((not (original-account account-password 'verify-pass) (error "Incorrect password ! -- HERE " account-password original-account)))
         ; At this point, we have the right password
-        ; (define paul-acc
+        ; (trace-define paul-acc
         ;   (make-joint mary-acc 'marypass 'paulpass))
         ; 
         ; So the access to paul would be normally done with 
         ; ((paul-acc 'paulpass 'withdraw) 50)
         ; This tells me the ordering of the arguments to use in the lambda definition.
         (else 
-          (lambda(joint-pass operation)
+          (trace-lambda(joint-pass operation)
             (let ((correct-pass? (eq? joint-pass password)))
               (cond ((not (correct-pass?))
                      (error "Incorrect password"))
@@ -53,7 +56,7 @@
                              (original-account account-password 'deposit))))))))))
 
 
-(define zen-acc (make-account 'zenandroid 1000))
+(trace-define zen-acc (make-account 'zenandroid 1000))
 
-(define zen-joint
+(trace-define zen-joint
   (make-joint zen-acc 'zenandroid 'jointpass))
