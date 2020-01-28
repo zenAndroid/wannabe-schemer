@@ -110,6 +110,13 @@ But either way, the concepts were neat, and if only for providing more concrete 
 
 I am under no illusion that this is exactly how type coercion works for instance, the same way i am under no illusion that the number used in programming languages are built up using church encoding, but it does explain how they can be achieved using basic components which is the entire point as i understand it.
 
+# On chapter 3 #
+
+I have just finished exercise 3.7
+
+Things are looking pretty interesting, however i think im going to skip the next ecercise, like i get the point that the order of evaluation matters, so i wont waste the time doing the exercise, i dont think its too hard eitherway.
+
+A couple of seconds after writing that, i suddenly decided to give it a shot.
 
 ## Note ##
 
