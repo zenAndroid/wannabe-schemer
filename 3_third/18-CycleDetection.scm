@@ -13,7 +13,7 @@
                (begin (set! encountered (cons list-item encountered))
                       (or (traverse (car list-item))
                           (traverse (cdr list-item)))))
-              (element-encountered? #t)))))
+              (element-encountered? (has-cycles? list-item))))))
   (traverse arg-list))
 
 (define (cycle-haver arg-list)
