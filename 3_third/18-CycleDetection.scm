@@ -11,7 +11,8 @@
               (memq list-item encountered)))
         (cond ((not element-encountered?)
                (begin (set! encountered (cons list-item encountered))
-                      (traverse (cdr list-item))))
+                      (or (traverse (car list-item))
+                          (traverse (cdr list-item)))))
               (element-encountered? #t)))))
   (traverse arg-list))
 
