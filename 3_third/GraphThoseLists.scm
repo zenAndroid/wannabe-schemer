@@ -46,4 +46,6 @@
 
 (define the-list (list 1 2 3))
 
+(set-car! (cddr the-list) (cdr the-list))
+
 (display (list->graphviz the-list))
