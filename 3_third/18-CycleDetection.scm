@@ -1,20 +1,8 @@
-(define (last-pair x)
-  (if (null? (cdr x))
-      x
-      (last-pair (cdr x))))
-
-(define (count-pairs x)
-  (if (not (pair? x))
-      0
-      (+ (count-pairs (car x))
-         (count-pairs (cdr x))
-         1)))
-
-
 (define the-list (list 1 2 3))
 
 (display the-list)
 (newline)
+
 (set-cdr! (cddr the-list)
           (cdr the-list))
 
@@ -27,8 +15,11 @@
       (if (null? list-item)
         #f
         (let ((element-encountered?
-                (memq (car list-item) encountered)))
+                (memq list-item encountered)))
           (cond ((not element-encountered?)
-                 (begin (cons (car list-item) encountered)
+                 (begin (set! encountered (cons list-item encountered))
+                        (display encountered)
+                        (newline)
                         (traverse (cdr list-item))))
-                ((element-encountered?) #t)))))))
+                ((element-encountered?) #t)))))
+    (traverse arg-list)))
