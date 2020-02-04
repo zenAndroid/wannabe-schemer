@@ -36,7 +36,7 @@ representation.
                    (set! front-ptr new-pair)
                    (set! rear-ptr new-pair))
                   (else
-                    (set-cdr! front-ptr new-pair)
+                    (set-cdr! rear-ptr new-pair)
                     (set! rear-ptr new-pair)))))
         ; delete
         (define (delete-q!)
@@ -48,5 +48,25 @@ representation.
           (cond ((eq? m 'insert) insert-q!)
                 ((eq? m 'delete) delete-q!)
                 ((eq? m 'front) front-q)
+                ((eq? m 'rear) rear-ptr)
                 (else "UNKNOWN OPERATION")))
         dispatch))
+
+
+(define test-q (make-queue))
+
+((test-q 'insert) 1)
+
+((test-q 'front))
+
+((test-q 'insert) 2)
+
+((test-q 'front))
+
+((test-q 'insert) 3)
+
+((test-q 'front))
+
+((test-q 'insert) 4)
+
+((test-q 'front))
