@@ -59,7 +59,7 @@ representation.
   ((queue 'insert) item))
 
 (define (q-delete queue)
-  (queue 'delete))
+  ((queue 'delete)))
 
 (define (q-front queue)
-  (queue 'front)
+  ((queue 'front)))
