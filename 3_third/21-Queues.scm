@@ -62,3 +62,17 @@
 (delete-q! q1)
 
 ; (() b)
+
+
+; The reason is that the standar lisp printer shows all of the content 
+; of the queue pair so it shows the value of front pointer AND the rear pointer
+; whereas logically we'd only care about seeing the value of front pointer since
+; that is what shows the actual content of the queue.
+
+; we need to define our own procedure with its own internal logic
+
+(define (print-q q)
+  (front-ptr q))
+
+; Could be as simple as that or as complex as something that prints
+; space between the element or whatever you fancy
