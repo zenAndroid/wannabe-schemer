@@ -28,7 +28,7 @@ representation.
         (define (front-q)
           (if (empty-q?)
             (error "CANNOT OUTPUT THE FRONT OF AN EMPTY LIST")
-            front-ptr))
+            (car front-ptr)))
         ; insert
         (define (insert-q! item)
           (let ((new-pair (cons item '())))
@@ -63,3 +63,18 @@ representation.
 
 (define (q-front queue)
   ((queue 'front)))
+
+(q-insert test-q 1)
+(q-insert test-q 2)
+(q-insert test-q 3)
+(q-insert test-q 4)
+(q-insert test-q 5)
+(q-insert test-q 6)
+(q-insert test-q 7)
+(q-insert test-q 8)
+(q-insert test-q 9)
+(q-insert test-q 0)
+(q-insert test-q 3)
+(q-insert test-q 7)
+(q-front test-q)
+
