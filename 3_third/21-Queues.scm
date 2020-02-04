@@ -45,3 +45,20 @@
         (else (set-front-ptr! q (cdr (front-ptr q)))
               q)))
 
+(define q1 (make-queue))
+
+(insert-q! q1 'a)
+
+; ((a) a)
+
+(insert-q! q1 'b)
+
+; ((a b) b)
+
+(delete-q! q1)
+
+; ((b) b)
+
+(delete-q! q1)
+
+; (() b)
