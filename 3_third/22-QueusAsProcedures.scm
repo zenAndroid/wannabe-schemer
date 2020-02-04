@@ -55,18 +55,11 @@ representation.
 
 (define test-q (make-queue))
 
-((test-q 'insert) 1)
+(define (q-insert queue item)
+  ((queue 'insert) item))
 
-((test-q 'front))
+(define (q-delete queue)
+  (queue 'delete))
 
-((test-q 'insert) 2)
-
-((test-q 'front))
-
-((test-q 'insert) 3)
-
-((test-q 'front))
-
-((test-q 'insert) 4)
-
-((test-q 'front))
+(define (q-front queue)
+  (queue 'front)
