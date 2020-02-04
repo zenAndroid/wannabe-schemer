@@ -44,8 +44,11 @@
   (string-append "digraph G {\n" result "}\n"))
 
 
+(define foo (list 1 2))
+(define goo (list foo foo))
+
+(define he-list (list 1 2 3))
 (define the-list (list 1 2 3))
-
-(set-car! (cddr the-list) (cdr the-list))
-
+(set-car! (cddr he-list) (cdr he-list))
+(set-cdr! (cddr the-list) the-list)
 (display (list->graphviz the-list))
