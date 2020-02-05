@@ -69,9 +69,6 @@ Going to introduce list-set!
             (list-set! new-element 0 (rear-deque deque))
             (set-rear-ptr! deque new-element)))))
 
-(define foo (make-deque))
-(rear-insert-deque! foo 4)
-foo
 
 (define (rear-delete-deque! deque)
   (if (empty-deque? deque)
@@ -87,10 +84,73 @@ foo
             ; (set! (next new-element) (front-deque deque))
             (list-set! new-element 2 (front-deque deque))
             ; (set! (prev (front-deque deque)) new-element)
-            (list-set! (front-deque deque) 1 new-element)
+            (list-set! (front-deque deque) 0 new-element)
             (set-car! deque new-element)))))
 
 (define (front-delete-deque! deque)
   (cond ((empty-deque? deque)
          (error "CANNOT DELETE FROM AN EMPTY DEQUE"))
         (else (set-car! deque (next (front-deque deque))))))
+
+
+(define foo (make-deque))
+
+(rear-insert-deque! foo 1)
+(rear-insert-deque! foo 2)
+(rear-insert-deque! foo 4)
+(rear-insert-deque! foo 8)
+(rear-insert-deque! foo 16)
+(rear-insert-deque! foo 32)
+(rear-delete-deque! foo)
+(rear-insert-deque! foo 64)
+(front-insert-deque! foo "YEAH")
+(front-insert-deque! foo "YEAH")
+
+
+(define (list->graphviz lst)
+  """Convert a list into a set of Graphviz instructions"""
+  (define number 0)
+  (define result "")
+  (define ordinals '())
+  (define (result-append! str)
+    (set! result (string-append result str)))
+
+  (define* (nodename n #:optional cell)
+    (format #f "cons~a~a" n (if cell (string-append ":" cell) "")))
+
+  (define* (build-connector from to #:optional from-cell)
+    (format #f "\t~a -> ~a;~%" (nodename from from-cell) (nodename to)))
+
+  (define (build-shape elt)
+    (define (build-label cell)
+      (cond ((null? cell) "&#x2205;") ; null character
+            ((pair? cell) "&#x2022;") ; bullet dot character
+            (else (format #f "~a" cell))))
+    (set! number (+ number 1))
+
+    (format #f "\t~a [shape=record,label=\"<car> ~a | <cdr> ~a\"];~%"
+            (nodename number)
+            (build-label (car elt))
+            (build-label (cdr elt))))
+
+  (define* (search xs #:optional from-id from-cell)
+    (let ((existing (assq xs ordinals)))
+      (if (pair? existing) ;; handle lists with cycles
+          ;; we've already built a node for this entry, just make a connector
+          (result-append! (build-connector from-id (cdr existing) from-cell))
+          (begin
+            (result-append! (build-shape xs))
+            (set! ordinals (assq-set! ordinals xs number))
+            (let ((parent-id number))
+              ;; make a X->Y connector
+              (if (number? from-id)
+                  (result-append! (build-connector from-id parent-id from-cell)))
+              ;; recurse
+              (if (pair? (car xs)) (search (car xs) parent-id "car"))
+              (if (pair? (cdr xs)) (search (cdr xs) parent-id "cdr")))))))
+
+  (search lst)
+  (string-append "digraph G {\n" result "}\n"))
+
+
+(display (list->graphviz foo))
