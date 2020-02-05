@@ -49,15 +49,29 @@ Theta(1) steps.
     (null? (front-deque deque))
     (null? (rear-deque deque))))
 
+#|
+
+Going to introduce list-set!
+
+(list-set! list-name index-to-be-changed new-value)
+
+|#
+
 (define (rear-insert-deque! deque element)
   (let ((new-element (DLL-element element)))
     (cond ((empty-deque? deque)
            (set-front-ptr! deque new-element)
            (set-rear-ptr! deque new-element))
           (else
-            (set! (next (rear-deque deque)) new-element)
-            (set! (prev new-element) (rear-deque deque))
+            ; (set! (next (rear-deque deque)) new-element)
+            (list-set! (rear-deque deque) 2 new-element)
+            ; (set! (prev new-element) (rear-deque deque))
+            (list-set! new-element 0 (rear-deque deque))
             (set-rear-ptr! deque new-element)))))
+
+(define foo (make-deque))
+(rear-insert-deque! foo 4)
+foo
 
 (define (rear-delete-deque! deque)
   (if (empty-deque? deque)
@@ -70,8 +84,10 @@ Theta(1) steps.
            (set-car! deque new-element)
            (set-cdr! deque new-element))
           (else
-            (set! (next new-element) (front-deque deque))
-            (set! (prev (front-deque deque)) new-element)
+            ; (set! (next new-element) (front-deque deque))
+            (list-set! new-element 2 (front-deque deque))
+            ; (set! (prev (front-deque deque)) new-element)
+            (list-set! (front-deque deque) 1 new-element)
             (set-car! deque new-element)))))
 
 (define (front-delete-deque! deque)
