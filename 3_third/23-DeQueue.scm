@@ -114,23 +114,19 @@ Going to introduce list-set!
   (cond ((empty-deque? deque)
          (error "CANNOT DELETE FROM AN EMPTY DEQUE"))
         (else 
-          (set-front-ptr! deque (next (front-deque deque))))))
+          (set-front-ptr! deque (next (front-deque deque)))
+          (set-prev-dll! (front-deque deque) '()))))
 
 
 (define foo (make-deque))
 
-(rear-insert-deque! foo 1023)
-(rear-insert-deque! foo 2023)
-(rear-insert-deque! foo 4023)
-(rear-insert-deque! foo 8023)
-(rear-insert-deque! foo 10236)
-(rear-insert-deque! foo 30232)
+(rear-insert-deque! foo 16)
+(rear-insert-deque! foo 32)
 (rear-delete-deque! foo)
 (rear-insert-deque! foo 64)
 (front-insert-deque! foo "YEAH")
-(front-insert-deque! foo "YEAH")
 (front-delete-deque! foo)
-(front-insert-deque! foo "TesT")
+; (front-insert-deque! foo "TesT")
 
 
 (define (list->graphviz lst)
