@@ -1,12 +1,5 @@
 #|
 
-Defining procedures for the creation and manipulation of doubly linked lists.
-PS: DLL = Doubly Linked List
-
-|#
-
-#|
-
 Exercise 3.23: A deque ("double-ended queue") is a sequence
 in which items can be inserted and deleted at either the
 front or the rear. Operations on deques are the constructor
@@ -19,6 +12,14 @@ the operations. All operations should be accomplished in
 Theta(1) steps.
 
 |#
+
+#|
+
+Defining procedures for the creation and manipulation of doubly linked lists.
+PS: DLL = Doubly Linked List
+
+|#
+
 
 (define (DLL-element element)
   (list '() element '()))
@@ -50,6 +51,24 @@ Theta(1) steps.
     (null? (rear-deque deque))))
 
 #|
+Introducing abstract mutators
+set-next-ddl! - set-prev-dll!
+These are going to use list-set!
+|#
+
+(define (set-next-ddl! dll-element new-element)
+  (list-set! dll-element 2 new-element)) 
+; The justification for number 2 is the a DLL-element
+; is (list previous-link element next-link) 
+;                0          1       2
+
+(define (set-prev-dll! dll-element new-element)
+  (list-set! dll-element 0 new-element))
+; The justification for number 0 is the a DLL-element
+; is (list previous-link element next-link) 
+;                0          1       2
+
+#|
 
 Going to introduce list-set!
 
@@ -64,9 +83,11 @@ Going to introduce list-set!
            (set-rear-ptr! deque new-element))
           (else
             ; (set! (next (rear-deque deque)) new-element)
-            (list-set! (rear-deque deque) 2 new-element)
+            ; (list-set! (rear-deque deque) 2 new-element)
+            (set-next-ddl! (rear-deque deque) new-element)
             ; (set! (prev new-element) (rear-deque deque))
-            (list-set! new-element 0 (rear-deque deque))
+            ; (list-set! new-element 0 (rear-deque deque))
+            (set-prev-dll! new-element (rear-deque deque))
             (set-rear-ptr! deque new-element)))))
 
 
@@ -82,9 +103,11 @@ Going to introduce list-set!
            (set-cdr! deque new-element))
           (else
             ; (set! (next new-element) (front-deque deque))
-            (list-set! new-element 2 (front-deque deque))
+            ; (list-set! new-element 2 (front-deque deque))
+            (set-next-ddl! new-element (front-deque deque))
             ; (set! (prev (front-deque deque)) new-element)
-            (list-set! (front-deque deque) 0 new-element)
+            ; (list-set! (front-deque deque) 0 new-element)
+            (set-prev-dll! (front-deque deque) new-element)
             (set-car! deque new-element)))))
 
 (define (front-delete-deque! deque)
