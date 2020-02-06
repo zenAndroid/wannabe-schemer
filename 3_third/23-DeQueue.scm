@@ -119,16 +119,18 @@ Going to introduce list-set!
 
 (define foo (make-deque))
 
-(rear-insert-deque! foo 1)
-(rear-insert-deque! foo 2)
-(rear-insert-deque! foo 4)
-(rear-insert-deque! foo 8)
-(rear-insert-deque! foo 16)
-(rear-insert-deque! foo 32)
+(rear-insert-deque! foo 1023)
+(rear-insert-deque! foo 2023)
+(rear-insert-deque! foo 4023)
+(rear-insert-deque! foo 8023)
+(rear-insert-deque! foo 10236)
+(rear-insert-deque! foo 30232)
 (rear-delete-deque! foo)
 (rear-insert-deque! foo 64)
 (front-insert-deque! foo "YEAH")
 (front-insert-deque! foo "YEAH")
+(front-delete-deque! foo)
+(front-insert-deque! foo "TesT")
 
 
 (define (list->graphviz lst)
