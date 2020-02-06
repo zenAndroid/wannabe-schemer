@@ -99,8 +99,8 @@ Going to introduce list-set!
 (define (front-insert-deque! deque item)
   (let ((new-element (DLL-element item)))
     (cond ((empty-deque? deque)
-           (set-car! deque new-element)
-           (set-cdr! deque new-element))
+           (set-front-ptr! deque new-element)
+           (set-rear-ptr! deque new-element))
           (else
             ; (set! (next new-element) (front-deque deque))
             ; (list-set! new-element 2 (front-deque deque))
@@ -108,12 +108,13 @@ Going to introduce list-set!
             ; (set! (prev (front-deque deque)) new-element)
             ; (list-set! (front-deque deque) 0 new-element)
             (set-prev-dll! (front-deque deque) new-element)
-            (set-car! deque new-element)))))
+            (set-front-ptr! deque new-element)))))
 
 (define (front-delete-deque! deque)
   (cond ((empty-deque? deque)
          (error "CANNOT DELETE FROM AN EMPTY DEQUE"))
-        (else (set-car! deque (next (front-deque deque))))))
+        (else 
+          (set-front-ptr! deque (next (front-deque deque))))))
 
 
 (define foo (make-deque))
