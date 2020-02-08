@@ -118,6 +118,11 @@ Things are looking pretty interesting, however i think im going to skip the next
 
 A couple of seconds after writing that, i suddenly decided to give it a shot.
 
+- **Exercise 3.25** : TODO : Dunno why but my brain juat couldn't concentrate enough for it.
+Also im skipping exercise 3.26 for now, just deosnt seem vry interesting.
+
+The next exercise however, i might fiddle with a bit.
+
 ## Note ##
 
 There are still a number of individual exercises that i will record for posterior practice.
