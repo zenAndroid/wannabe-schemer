@@ -2,7 +2,7 @@
 ![Structure and Interpretation of Computer Programs](SICP.jpg "SICP banner")
 Working through Structure and Interpretation of Computer Programs.
 
-This repo is noe=w being simultaneasly posted to [GitLab](https://gitlab.com/zenAndroid/scheming-sicp) and [GitHub](https://github.com/zenAndroid/wannabe-schemer).
+This repo is now being simultaneously posted to [GitLab](https://gitlab.com/zenAndroid/scheming-sicp) and [GitHub](https://github.com/zenAndroid/wannabe-schemer).
 Occasionally jotting down my thoughts about the material.
 
 Using vim, when i get stuck i go to DrRacket.
@@ -29,7 +29,7 @@ Here are :
 
 ### 1.2.3 Orders of Growth ###
 
-### 1.2.6 Testing for optimality ###
+### 1.2.6 Testing for primality ###
 
 ### 2.1.4 EXTENDED EXERCISE : INTERVAL ARITHMETIC ###
 
@@ -47,7 +47,7 @@ And all of the trees shenanigans
 
 Need to see if i can actually, ... You know ... *USE* this thing instead of just implementing encoders/decoders that take/spit out a list of symbols .... :weary:
 
-In particular, need to pass the encoding function a *string*, not *a list of symbols* because i cant automate that.
+In particular, need to pass the encoding function a *string*, not *a list of symbols* because i can't automate that.
 
 #### YES, USE STRING->SYMBOL ####
 
@@ -114,14 +114,14 @@ I am under no illusion that this is exactly how type coercion works for instance
 
 I have just finished exercise 3.7
 
-Things are looking pretty interesting, however i think im going to skip the next ecercise, like i get the point that the order of evaluation matters, so i wont waste the time doing the exercise, i dont think its too hard eitherway.
+Things are looking pretty interesting, however i think I'm going to skip the next exercise, like i get the point that the order of evaluation matters, so i wont waste the time doing the exercise, i don't think its too hard either way.
 
 A couple of seconds after writing that, i suddenly decided to give it a shot.
 
-- **Exercise 3.25** : TODO : Dunno why but my brain juat couldn't concentrate enough for it.
-Also im skipping exercise 3.26 for now, just deosnt seem vry interesting.
+- **Exercise 3.25** : TODO : Dunno why but my brain just couldn't concentrate enough for it.
+Also I'm skipping exercise 3.26 for now, just doesn't seem very interesting.
 
-The next exercise however, i might fiddle with a bit.
+The next exercise however, i might fiddle with a bit, because that memoization function seems to only take one argument, i wonder if i can ... generalize that.
 
 ## Note ##
 
