@@ -120,9 +120,11 @@ A couple of seconds after writing that, i suddenly decided to give it a shot.
 
 - **Exercise 3.25** : TODO : Dunno why but my brain just couldn't concentrate enough for it.
 Also I'm skipping exercise 3.26 for now, just doesn't seem very interesting.
-
 The next exercise however, i might fiddle with a bit, because that memoization function seems to only take one argument, i wonder if i can ... generalize that.
-
+- **Exercise 3.30** TODO ; that figure confuses me where are the inputs .. where are the outputs? 
+Also this seems like the fun exercices you can only do and hope are correct ...
+... And THEN *after* reading the rest of the material, you can actually go back and test zhat you've written ...
+I guess i should keep quiet and git gud at interpreting the code in my head.
 ## Note ##
 
 There are still a number of individual exercises that i will record for posterior practice.
