@@ -172,6 +172,15 @@
     (constant 32 y)
     'ok))
 
+(define (averager a b c)
+  (let ((t (make-connector))
+        (y (make-connector)))
+    (adder a b t)
+    (multiplier t y c)
+    (constant 0.5 y)
+    'ok))
+
+
 (define C (make-connector))
 (define F (make-connector))
 
