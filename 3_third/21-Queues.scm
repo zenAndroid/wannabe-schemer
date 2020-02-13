@@ -45,21 +45,21 @@
         (else (set-front-ptr! q (cdr (front-ptr q)))
               q)))
 
-(define q1 (make-queue))
+; (define q1 (make-queue))
 
-(insert-q! q1 'a)
-
-; ((a) a)
-
-(insert-q! q1 'b)
-
-; ((a b) b)
-
-(delete-q! q1)
-
-; ((b) b)
-
-(delete-q! q1)
+; (insert-q! q1 'a)
+; 
+; ; ((a) a)
+; 
+; (insert-q! q1 'b)
+; 
+; ; ((a b) b)
+; 
+; (delete-q! q1)
+; 
+; ; ((b) b)
+; 
+; (delete-q! q1)
 
 ; (() b)
 
@@ -71,8 +71,8 @@
 
 ; we need to define our own procedure with its own internal logic
 
-(define (print-q q)
-  (front-ptr q))
+; (define (print-q q)
+;   (front-ptr q))
 
 ; Could be as simple as that or as complex as something that prints
 ; space between the element or whatever you fancy
