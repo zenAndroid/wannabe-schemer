@@ -183,4 +183,4 @@
 (define C (make-connector))
 (define F (make-connector))
 
-(celsius-fahrenheit-converter C F)
+; (celsius-fahrenheit-converter C F)
