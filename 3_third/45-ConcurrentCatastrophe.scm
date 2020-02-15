@@ -18,7 +18,8 @@
 ; can produce only two possible values for x, 101 or 121. The other possibilities
 ; are eliminated, because the execution of P 1 and P 2 cannot be interleaved.
 ; 
-; In other terms, If two procedures are serialized using the same serializer, then their execution cannot be interleaved.
+; In other terms, If two procedures are serialized using the same serializer,
+; then their execution cannot be interleaved.
 ; 
 ; This makes explaining what's going on with the exercise a matter of course, because
 ; 
