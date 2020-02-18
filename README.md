@@ -125,6 +125,12 @@ The next exercise however, i might fiddle with a bit, because that memoization f
 Also this seems like the fun exercices you can only do and hope are correct ...
 ... And THEN *after* reading the rest of the material, you can actually go back and test zhat you've written ...
 I guess i should keep quiet and git gud at interpreting the code in my head.
+
+## On concurenncy
+
+Theres an exercise (not in the book) that I was inspired to do from reading the 'Mechanisms for controlling concurenncy'.
+Given two sets representing three ordered events (x y z) and (a b c), write a function that outputs all the possible interleavings os these events).`
+
 ## Note ##
 
 There are still a number of individual exercises that i will record for posterior practice.
