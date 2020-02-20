@@ -131,6 +131,10 @@ I guess i should keep quiet and git gud at interpreting the code in my head.
 Theres an exercise (not in the book) that I was inspired to do from reading the 'Mechanisms for controlling concurenncy'.
 Given two sets representing three ordered events (x y z) and (a b c), write a function that outputs all the possible interleavings os these events).`
 
+## Notes about a certain strem process ##
+
+The erastosthenes sieve was particularly clever tbh, .... of course, in haskell this is even more elegant, but that doesn't take away from the elegance of the implemented procedure.
+
 ## Note ##
 
 There are still a number of individual exercises that i will record for posterior practice.
