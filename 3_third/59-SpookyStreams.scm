@@ -2,7 +2,9 @@
 (load "58-EXPAND.scm")
 
 (define (div-streams s1 s2)
-  (zen-stream-map (lambda(x y) (/ (exact->inexact x) y)) s1 s2))
+  (if (= (stream-first s2) 0)
+    (error "Division by zero error !")
+    (zen-stream-map (lambda(x y) (/ (exact->inexact x) y)) s1 s2)))
 
 ; Welcome to Racket v7.5.
 ;   (load "58-EXPAND.scm")
