@@ -14,7 +14,7 @@
 (define rec-accel-ln 
   (accelerated-sequence euler-transform lns-stream))
 
-(stream->list (stream-take rec-accel-ln 15))
+; (stream->list (stream-take rec-accel-ln 15))
 
 ; > (stream->list (stream-take rec-accel-ln 15))
 ; '(1.0

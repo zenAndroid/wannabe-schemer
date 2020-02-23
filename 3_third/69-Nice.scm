@@ -34,6 +34,6 @@
           (sqr (cadr triplet)))))
   ttt))
 
-(stream->list (stream-take pyth 34))
+; (stream->list (stream-take pyth 34))
 
 ; Works as intended !
