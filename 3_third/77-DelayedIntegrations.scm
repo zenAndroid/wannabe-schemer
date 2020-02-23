@@ -34,6 +34,13 @@
 ;                                 int))))
 ;   int)
 
+(define (integral delayed-integrand initial-value dt)
+  (define int
+    (stream-cons initial-value
+                 (let ((integrand (force delayed-integrand)))
+                   (add-streams (scale-stream integrand dt)
+                                int))))
+  int)
 
 
 (define (solve f y0 dt)
@@ -41,10 +48,39 @@
   (define dy (stream-map f y))
   y)
 
-(define E (solve (lambda(y) y) 1 0.0000001))
+(define E (solve (lambda(y) y) 1 0.001))
 
 ; The smaller the timestep the more items I have to traverse in the stream to
 ; get to a decent approximation of e, wonder why.
+
+; future zenAndroid here: Nope I was being silly, if you go with a timestep of
+; 0.001 then you need to reference the 1000th element of the output stream to
+; get the exponential function evaluated at 1, because 0.001*1000 = 1.
+; Understand that the output stream is a *function*, just represented as a
+; stream, and each element is one timestep away from the previous one, nad this
+; prompts me to try smaller and smaller timesteps and accessing the
+; appropriiate output stream to try and approximate e better, and compare
+; between timesteps.
+
+; > (define E (solve (lambda(y) y) 1 0.1))
+; > (stream-ref E 10)
+; 2.5937424601
+; > (define E (solve (lambda(y) y) 1 0.01))
+; > (stream-ref E 100)
+; 2.704813829421526
+; > (define E (solve (lambda(y) y) 1 0.001))
+; > (stream-ref E 1000)
+; 2.716923932235896
+; > (define E (solve (lambda(y) y) 1 0.0001))
+; > (stream-ref E 10000)
+; 2.7181459268252266
+; > (define E (solve (lambda(y) y) 1 0.00001))
+; > (stream-ref E 100000)
+; 2.7182682371744953
+; > (define E (solve (lambda(y) y) 1 0.0000001))
+; > (stream-ref E 10000000)
+; 2.7182816925440676
+; NEAT
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -65,13 +101,13 @@
 ; This aint gunna work since it has the same issue
 ; Should be the exact same thing ? I don't understand ...
 
-(define (integral delayed-integrand initial-value dt)
-  (stream-cons initial-value
-               (let ((integrand (force delayed-integrand)))
-                 (if (stream-empty? integrand)
-                   the-empty-stream
-                   (integral
-                     (stream-rest integrand)
-                     (+ (* dt (stream-first integrand))
-                        initial-value)
-                     dt)))))
+; (define (integral delayed-integrand initial-value dt)
+;   (stream-cons initial-value
+;                (let ((integrand (force delayed-integrand)))
+;                  (if (stream-empty? integrand)
+;                    the-empty-stream
+;                    (integral
+;                      (stream-rest integrand)
+;                      (+ (* dt (stream-first integrand))
+;                         initial-value)
+;                      dt)))))
