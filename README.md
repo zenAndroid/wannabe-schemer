@@ -135,6 +135,12 @@ Given two sets representing three ordered events (x y z) and (a b c), write a fu
 
 The erastosthenes sieve was particularly clever tbh, .... of course, in haskell this is even more elegant, but that doesn't take away from the elegance of the implemented procedure.
 
+## STREAMMMMMMMMS ##
+
+I will need to do this section again.
+
+Streams are easy to understand, *atomically* but when the definitions of functions get complicated, I often find myself lost.
+
 ## Note ##
 
 There are still a number of individual exercises that i will record for posterior practice.
