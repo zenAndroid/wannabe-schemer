@@ -24,7 +24,4 @@
 ; time to check the solutions.
 ; Seems OK, wanted some test cases, didnt bother too much
 
-(stream-ref (solve-2nd 1 0 0.0001 1 1) 10000)  ; e
-(stream-ref (solve-2nd 0 -1 0.0001 1 0) 10472)  ; cos pi/3 = 0.5
-(stream-ref (solve-2nd 0 -1 0.0001 0 1) 5236)  ; sin pi/6 = 0.5
 

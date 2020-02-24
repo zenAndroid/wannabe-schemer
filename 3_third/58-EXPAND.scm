@@ -3,9 +3,12 @@
 
 (define (expand num denom radix)
   (stream-cons (quotient (* num radix) denom)
-               (expand (remainder (* num radix) denom) denom radix)))
+               (expand 
+                 (remainder (* num radix) denom)
+                 denom 
+                 radix)))
 
-(sample (expand 1 7 10))
+; (sample (expand 1 7 10))
 
 ; > (load "56-RHamming-Challenge.scm")
 ; > (define (expand num denom radix)
