@@ -55,3 +55,41 @@ Note: The first implementation I will do is going to be scheme specific with the
 
 
 ; Looks like it should be ecorrect to me...
+; Now onto implementing abstract selectors
+
+(define (and-predicates exp) (cdr exp))
+
+(define (or-predicates exp) (cdr exp))
+
+(define (first-predicate predicates) (car predicates))
+
+(define (rest-of-predicates predicates) (cdr predicates))
+
+(define (no-predicates? predicates) (null? predicates))
+
+(define (make-and predicates) (list 'and predicates))
+
+(define (make-or predicates) (list 'or predicates))
+
+
+; Thus, the version of eval-and/eval-or becomes the more verbose but more
+; extensible (and also, dare I say, the more readable and self-documenting) (no
+; comments this time, and theyre not really needed)
+
+(define (eval-and exp env)
+  (let ((predicates (and-predicates exp)))                       
+    (if (no-predicates? predicates)                            
+      #t                                              
+                                                      
+      (if (first-predicate predicates)                            
+        (eval-and (make-and (rest-of-predicates predicates)) env)   
+        #f))))
+
+(define (eval-or exp env)
+  (let ((predicates (or-predicates exp)))                       
+    (if (no-predicates? predicates)                            
+      #f                                              
+                                                      
+      (if (first-predicate predicates)                            
+        #t                                            
+        (eval-or (make-or (rest-of-predicates predicates)))))))
