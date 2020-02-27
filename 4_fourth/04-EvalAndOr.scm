@@ -1,4 +1,9 @@
 ; 2020-02-26 20:29 :: zenAndroid :: Just saw Gerald's lecture (the first half of the lesture), lovely guy. DO YOU HAVE ANY QUESTIONS?
+; Also, after doing the solution I realize this technically does not respect
+; what the book says because it does not return the value of the last
+; expression, however I'm just going to leave it as is since that change isnt
+; complicated to dao anyway, just hope it's not going to be used in the future,
+; and honestly even if it is I'll just fix it up real quick.
 
 ; Exercise 4.4.  Recall the definitions of the special forms and and or from
 ; chapter 1:
