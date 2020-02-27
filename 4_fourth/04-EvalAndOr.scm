@@ -39,7 +39,7 @@ Note: The first implementation I will do is going to be scheme specific with the
     (if (null? predicates)                            ; If there are no predicates ...
       #t                                              ; then return true
                                                       ; IF THERE *ARE* PREDICATES ...
-      (if (car predicates)                            ; then check if the first predicate is true, if that *IS* the case, ... then ...
+      (if (eval (car predicates)) env)                ; then check if the first predicate is true, if that *IS* the case, ... then ...
         (eval-and (cons 'and (cdr predicates)) env)   ; Evaluate the rest of the (and-ed) expression.
         #f))))                                        ; If the first available predicate is NOT true, return false and stop executing.
 
@@ -49,7 +49,7 @@ Note: The first implementation I will do is going to be scheme specific with the
     (if (null? predicates)                            ; If there are no predicates ...
       #f                                              ; then return false
                                                       ; IF THERE *ARE* PREDICATES ...
-      (if (car predicates)                            ; then check if the first predicate is true, if that *IS* the case, ... then ...
+      (if (eval (car predicates)) env)                ; then check if the first predicate is true, if that *IS* the case, ... then ...
         #t                                            ; simply return true, there is no need for further processing
         (eval-or (cons 'or (cdr predicates) env)))))) ; Evaluate the rest of the (or-ed) expression.
 
@@ -81,7 +81,7 @@ Note: The first implementation I will do is going to be scheme specific with the
     (if (no-predicates? predicates)                            
       #t                                              
                                                       
-      (if (first-predicate predicates)                            
+      (if (true? (eval (first-predicate predicates) env)))
         (eval-and (make-and (rest-of-predicates predicates)) env)   
         #f))))
 
@@ -90,6 +90,6 @@ Note: The first implementation I will do is going to be scheme specific with the
     (if (no-predicates? predicates)                            
       #f                                              
                                                       
-      (if (first-predicate predicates)                            
+      (if (true? (eval (first-predicate predicates) env)))
         #t                                            
         (eval-or (make-or (rest-of-predicates predicates)))))))
