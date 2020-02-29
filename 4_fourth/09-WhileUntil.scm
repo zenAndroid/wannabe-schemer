@@ -41,8 +41,8 @@
                    (sequence->exp 
                      (list 'define (list 'loop)
                            (make-if condition
-                                    (sequence->exp (list body (list 'loop)))
-                                    'while-loop-done)
+                                    (sequence->exp (cons body (list 'loop)))
+                                    '())
                            (list 'loop)))))))
 
 (define test-code
