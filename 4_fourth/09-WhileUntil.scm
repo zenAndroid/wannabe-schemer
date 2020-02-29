@@ -22,6 +22,9 @@
 (define (make-if predicate consequent alternative)
   (list 'if predicate consequent alternative))
 
+(define (make-one-armed-if predicate consequent)
+  (list 'if predicate consequent))
+
 (define (last-exp? seq) (null? (cdr seq)))
 (define (first-exp seq) (car seq))
 (define (rest-exps seq) (cdr seq))
@@ -37,9 +40,8 @@
   (let ((condition (until-condition exp))
         (body (until-body exp)))
     (let ((loop-definition (list 'define (list 'loop)
-                                 (make-if condition
-                                          (sequence->exp (list body (list 'loop)))
-                                          '()))))
+                                 (make-one-armed-if condition
+                                                    (sequence->exp (list (sequence->exp body) (list 'loop)))))))
     (list
       (make-lambda '()
                    (sequence->exp (list loop-definition (list 'loop))))))))
@@ -49,3 +51,14 @@
      (< ii 5)
      (display ii)
      (set! ii (+ ii 1))))
+
+(define ii 0)
+
+((lambda ()
+   (begin
+     (define (loop)
+       (if (< ii 5)
+         (begin
+           (begin (display ii) (newline) (set! ii (+ ii 1)))
+           (loop))))
+     (loop))))
