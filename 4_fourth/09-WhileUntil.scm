@@ -36,33 +36,16 @@
 (define (until-exp-handler exp)
   (let ((condition (until-condition exp))
         (body (until-body exp)))
+    (let ((loop-definition (list 'define (list 'loop)
+                                 (make-if condition
+                                          (sequence->exp (list body (list 'loop)))
+                                          '()))))
     (list
       (make-lambda '()
-                   (sequence->exp 
-                     (list 'define (list 'loop)
-                           (make-if condition
-                                    (sequence->exp (cons body (list 'loop)))
-                                    '())
-                           (list 'loop)))))))
+                   (sequence->exp (list loop-definition (list 'loop))))))))
 
 (define test-code
   '(until
      (< ii 5)
      (display ii)
      (set! ii (+ ii 1))))
-
-
-; ((lambda ()
-;    (define (loop)
-;      (if (< ii 5)
-;        (begin ((display ii) (set! ii (+ ii 1))) (loop))
-;        while-loop-done)))
-;  (loop))
-
-(define ii 0)
-
-((lambda ()
-   (begin (define (loop)
-            (if (< ii 5)
-              (begin (display ii) (set! ii (+ ii 1)) (loop))
-              'while-loop-done))(loop))))
