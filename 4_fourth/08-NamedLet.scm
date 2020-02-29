@@ -1,6 +1,7 @@
 ; 2020-02-28 18:49 :: zenAndroid :: Making DG look like a neurotypical with
 ; this density of mine, but eh, no use sweating over it too much
 
+(load "00-CommonStuff.scm")
 
 (use-modules (ice-9 pretty-print)) 
 ; Just so you know, zen, this is for pretty printing the 'code' (the data (((At this point what's the difference? yEEeeEEEt
@@ -24,23 +25,11 @@
 (define (named-let-exps exp) (map cadr (named-let-var-exps exp)))
 
 (define (named-let-body exp) (cdddr exp)) 
-; cadddr or cdddr ? I wonder, not actually I think I rather use cdddr since
+; cadddr or cdddr ? I wonder, no actually I think I rather use cdddr since
 ; technically there could be a series of expressions with a regular let body,
 ; so I figure functionaliy is transferred over to this more specialized
 ; version.
 
-(define (sequence->exp seq)
-  (cond ((null? seq) seq)
-        ((last-exp? seq) (first-exp seq))
-        (else (make-begin seq))))
-
-(define (make-begin seq) (cons 'begin seq))
-
-(define (last-exp? seq) (null? (cdr seq)))
-(define (first-exp seq) (car seq))
-(define (rest-exps seq) (cdr seq))
-
-(define (make-lambda p b) (list 'lambda p b))
 
 (define (named-let? exp)
   (and (tagged-list 'let)

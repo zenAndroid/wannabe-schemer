@@ -59,8 +59,8 @@
 ; Im changing the caddr to cddr
 ; But I'm still pissed they did not explain it
 
-; ps just to explain this to the future foem of me or someome else: its becaude
-; the <body> can be a bunch of statements, so if you choose caddr you ;ight
+; ps just to explain this to the future form of me or someome else: its because
+; the <body> can be a bunch of statements, so if you choose caddr you might
 ; just get one such statement, but if you do cddr, youll get em all, so you can
 ; just transfrom them into one statements by stuffing all of them into a begin
 ; form ;)               - Brought to you by the 'this seems obvious to me now

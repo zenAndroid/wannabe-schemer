@@ -1,7 +1,8 @@
 ; 2020-02-27 21:03 :: zenAndroid :: ... I am ... yikes at this point I am
 ; officially even worse than Dragon God ...
-
 ; (let* <bindings> <body>)
+
+(load "00-CommonStuff.scm")
 
 (define (bindings exp) (cadr exp))
 
@@ -13,18 +14,9 @@
 
 (define (make-let bindings body) (list 'let bindings body))
 
-(define (sequence->exp seq)
-  (cond ((null? seq) seq)
-        ((last-exp? seq) (first-exp seq))
-        (else (make-begin seq))))
-
-(define (make-begin seq) (cons 'begin seq))
-(define (last-exp? seq) (null? (cdr seq)))
-(define (first-exp seq) (car seq))
-(define (rest-exps seq) (cdr seq))
-
 (define (let*->nested-lets exp)
-  ; 2020-02-28 18:50 :: zenAndroid ::I don't even remember clearly my thought process at the time, hopefully my notes are clear enough :sweat:
+  ; 2020-02-28 18:50 :: zenAndroid ::I don't even remember clearly my thought
+  ; process at the time, hopefully my notes are clear enough :sweat:
   (define (iter bindings)
     (if (null? bindings)
       (sequence->exp (let*-body exp))
