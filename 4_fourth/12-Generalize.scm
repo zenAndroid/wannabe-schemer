@@ -84,4 +84,6 @@ In the set-variable-value! procedure for instance:
 (define (the-procedure var val env) ; Same input variables
   (let ((scan-null (lambda() (SOMEFUNCTION (enclosing-environment env))))
         (scan-eq (lambda() (set-car! vals val))))
+    (define (env-loop env)
+      (define (
 
