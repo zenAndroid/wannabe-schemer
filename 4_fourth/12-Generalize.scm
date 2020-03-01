@@ -1,4 +1,4 @@
-; 2020-02-29 17:09 :: zenAndroid :: Oh yeah had the impulse to di this on my own lol
+; 2020-02-29 17:09 :: zenAndroid :: Oh yeah had the impulse to this on my own lol
 
 
 (define (lookup-variable-value var env)
@@ -42,48 +42,48 @@
           (frame-values (first-frame env)))))
 
 
-What they all have in common ...
+; I now realize that I havent captured this specific abstraction
+; ... rip
+(define (abstract-scanner BASE-CASE MATCH-CASE)
+  (define (scan vars vals)
+    (cond ((null? vars) (BASE-CASE))
+          ((eq? var (car vars)) (MATCH-CASE))
+          (else (scan (cdr vars) (cdr vals)))))
+  scan)
 
-(define (scan vars vals)
-  (cond ((null? vars) <some action>)
-        ((eq? var (car vars)) <some action>)
-        (else (scan (cdr vars) (cdr vars)))))
+; Now, to REDO the abstraction of envloop
 
-; I *think* the more general solution is this
-
-(define (scan vars vals null-action eq-action)
-  (cond ((null? vars) (null-action))
-        ((eq? var (car vars)) (eq-action))
-        (else (scan (cdr vars) (cdr vars)))))
-
-; ---------------------------------------------
-
-(define (env-loop env)
-  <scan-variant-definition>
+(define (env-loop env BASE-CASE MATCH-CASE)
+  (define scan (abstract-scanner BASE-CASE MATCH-CASE))
   (if (eq? env the-empty-environment)
-    (error "Unbound variable" var)
+    (error "Unbound variable" var) 
+    ; var is unbound now, but it *SHOULD* be 
+    ; bound when this function will execute
     (let ((frame (first-frame env)))
       (scan (frame-variables frame)
             (frame-values frame)))))
 
-; I *think* the more general solution is this
-; Env-loop needs to instantiate a specific variant of scan
-; So env-loop will have to get at least two new parameters to specify the
-; scan variant I think
+Re-read that comment for it is crucial.
 
-(define (env-loop env scan-null scan-eq)
-  (let ((scan-proc (scan vars vals scan-null scan-eq)))
-    (if (eq? env the-empty-environment)
-      (error "Unbound variable" var)
-      (let ((frame (first-frame env)))
-        (scan-proc (frame-variables frame)
-                   (frame-values frame))))))
+So this should make the definitions for the three othe function something like ...
 
-In the set-variable-value! procedure for instance:
+(define (lookup-variable-value var env)
+  (define base-case (lambda () (env-loop (enclosing-environment env))))
+  (define match-case (lambda () (car vals)))
+  (env-loop env base-case match-case))
 
-(define (the-procedure var val env) ; Same input variables
-  (let ((scan-null (lambda() (SOMEFUNCTION (enclosing-environment env))))
-        (scan-eq (lambda() (set-car! vals val))))
-    (define (env-loop env)
-      (define (
+(define (set-variable-value! var val env)
+  (define base-case  (lambda () (env-loop (enclosing-environment env))))
+  (define match-case (lambda () (set-car! vals val))
+  (env-loop env base-case match-case))
 
+(define (define-variable! var val env)
+  (define base-case  (lambda () (add-binding-to-frame! var val (first-frame env))))
+  (define match-case (lambda () (set-car! vals val)))
+  ((abstract-scanner base-case match-case)
+   (frame-variables (first-frame env))
+   (frame-values (first-frame env))))
+
+; There's something to note here, it's quite subtle, but still,
+; *applicative order is at odds with this style of definition*, because 
+; the Right-Hand-Side of define is going to get evaluated instantly, and envloop is not defined, nor is env, etc .., so I am going tto make it into the body of a lambda expression
