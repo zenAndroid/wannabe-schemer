@@ -183,7 +183,6 @@
          (error
           "Unknown procedure type -- APPLY" procedure))));}}}
 
-
 (define (list-of-values exps env);{{{
   (if (no-operands? exps)
       '()
@@ -364,5 +363,5 @@
 
 ;;;Following are commented out so as not to be evaluated when
 ;;; the file is loaded.
-;;(define the-global-environment (setup-environment))
-;;(driver-loop)
+(define the-global-environment (setup-environment))
+(driver-loop)
