@@ -1,21 +1,20 @@
 ; 2020-02-27 17:53 :: zenAndroid :: This should be relatively simple ...
 ; 2020-03-02 18:40 :: zenAndroid :: Time for the T E S T
-(define (make-lambda p b) (list 'lambda p b))
 
-(define (let? exp) (tagged-list? exp 'let))
-
-(define (let-var-exps exp) (cadr exp))
-
-(define (let-body exp) (cddr exp))
-
-(define (let-vars exp) (map car (let-var-exps exp)))
-
-(define (let-exps exp) (map cadr (let-var-exps exp)))
-
-(define (let->combination exp)
-  (cons (make-lambda (let-vars exp) (seq->expr (let-body exp)))
-        ; Used to use list, but changed to cons, because list creates a new list when cons just extends the old one
-        (let-exps exp)))
+;;; (define (let? exp) (tagged-list? exp 'let))
+;;; 
+;;; (define (let-var-exps exp) (cadr exp))
+;;; 
+;;; (define (let-body exp) (cddr exp))
+;;; 
+;;; (define (let-vars exp) (map car (let-var-exps exp)))
+;;; 
+;;; (define (let-exps exp) (map cadr (let-var-exps exp)))
+;;; 
+;;; (define (let->combination exp)
+;;;   (cons (make-lambda (let-vars exp) (seq->expr (let-body exp)))
+;;;         ; Used to use list, but changed to cons, because list creates a new list when cons just extends the old one
+;;;         (let-exps exp)))
 
 
 ; Solutions are making me fucking angry.
@@ -90,16 +89,12 @@
         (else
          (error "Unknown expression type -- EVAL" exp))));}}}
 
+; Self-evaluating, variables, and tagged list predicate {{{1 ;
 
 (define (self-evaluating? exp)
   (cond ((number? exp) #t)
         ((string? exp) #t)
         (else #f)))
-
-(define (quoted? exp)
-  (tagged-list? exp 'quote))
-
-(define (text-of-quotation exp) (cadr exp))
 
 (define (tagged-list? exp tag)
   (if (pair? exp)
@@ -108,13 +103,28 @@
 
 (define (variable? exp) (symbol? exp))
 
+; 1}}} ;
+
+; Quoted expression handler {{{1 ;
+
+(define (quoted? exp)
+  (tagged-list? exp 'quote))
+
+(define (text-of-quotation exp) (cadr exp))
+
+; 1}}} ;
+
+; Assignement handler {{{1 ;
+
 (define (assignment? exp)
   (tagged-list? exp 'set!))
 
 (define (assignment-variable exp) (cadr exp))
 
 (define (assignment-value exp) (caddr exp))
+; 1}}} ;
 
+; Definition handler {{{1 ;
 
 (define (definition? exp)
   (tagged-list? exp 'define))
@@ -129,36 +139,41 @@
       (caddr exp)
       (make-lambda (cdadr exp)
                    (cddr exp))))
+; 1}}} ;
+
+; Let Form handler {{{1 ;
+
+(define (let? exp) (tagged-list? exp 'let))
+
+(define (let-var-exps exp) (cadr exp))
+
+(define (let-body exp) (cddr exp))
+
+(define (let-vars exp) (map car (let-var-exps exp)))
+
+(define (let-exps exp) (map cadr (let-var-exps exp)))
+
+(define (let->combination exp)
+  (cons (make-lambda (let-vars exp) (seq->expr (let-body exp)))
+        ; Used to use list, but changed to cons, because list creates a new list when cons just extends the old one
+        (let-exps exp)))
+
+; 1}}} ;
+
+; Lambda handler {{{1 ;
 
 (define (lambda? exp) (tagged-list? exp 'lambda))
 
 (define (lambda-parameters exp) (cadr exp))
+
 (define (lambda-body exp) (cddr exp))
 
 (define (make-lambda parameters body)
   (cons 'lambda (cons parameters body)))
-; The book uses cons, I used list, but is there a difference.
-;;;   Let's think about it
-;;;   (list 'lambda (list parameters body))
-;;;   =>
-;;;   (cons 'lambda (cons parameters (cons body (cons '()))) '())
-;;;   scheme@(guile-user)> (define foo (list 'foo (list 'conke 'bepis)))
-;;;   scheme@(guile-user)> foo
-;;;   $1 = (foo (conke bepis))
-;;;   scheme@(guile-user)> (define cfoo (cons 'foo (cons 'conke 'bepis)))
-;;;   scheme@(guile-user)> cfoo
-;;;   $2 = (foo conke . bepis)
-;;;   scheme@(guile-user)> (define cfoo (cons 'foo (cons (list 'shimatta)))
-;;;   ... )
-;;;   ;;; <stdin>:5:24: warning: possibly wrong number of arguments to `cons'
-;;;   ERROR: In procedure cons:
-;;;   Wrong number of arguments to #<procedure cons (_ _)>
-;;;   
-;;;   Entering a new prompt.  Type `,bt' for a backtrace or `,q' to continue.
-;;;   scheme@(guile-user) [1]> (define cfoo (cons 'foo (cons 'conke (list 'foobar 'yeet))))
-;;;   scheme@(guile-user) [1]> cfoo
-;;;   $3 = (foo conke foobar yeet)
-; Yep cons is the only correct choice.
+
+; 1}}} ;
+
+; If-expression handler {{{1 ;
 
 (define (if? exp) (tagged-list? exp 'if))
 
@@ -177,6 +192,10 @@
 (define (make-one-armed-if predicate consequent)
   (list 'if predicate consequent))
 
+; 1}}} ;
+
+; Compound sequences of expressions handler {{{1 ;
+
 (define (begin? exp) (tagged-list? exp 'begin))
 
 (define (begin-actions exp) (cdr exp))
@@ -192,6 +211,9 @@
 
 (define (make-begin seq) (cons 'begin seq))
 
+; 1}}} ;
+
+; Procedure application handler {{{1 ;
 
 (define (application? exp) (pair? exp))
 (define (operator exp) (car exp))
@@ -201,6 +223,9 @@
 (define (first-operand ops) (car ops))
 (define (rest-operands ops) (cdr ops))
 
+; 1}}} ;
+
+; Cond expression handler {{{1 ;
 
 (define (cond? exp) (tagged-list? exp 'cond))
 
@@ -230,6 +255,7 @@
                      (sequence->exp (cond-actions first))
                      (expand-clauses rest))))))
 
+; 1}}} ;
 
 (define (apply procedure arguments);{{{
   (cond ((primitive-procedure? procedure)
@@ -272,8 +298,6 @@
                     (eval (definition-value exp) env)
                     env)
   'ok);}}}
-
-
 
 ;;; Evaluator data structures
 
