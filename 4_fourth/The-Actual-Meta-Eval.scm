@@ -8,7 +8,7 @@
 
 ;;;SECTION 4.1.1
 
-(define (eval exp env);{{{
+(define (zeval exp env);{{{
   (cond ((self-evaluating? exp) exp)
         ((variable? exp) (lookup-variable-value exp env))
         ((quoted? exp) (text-of-quotation exp))
@@ -21,9 +21,9 @@
                          env))
         ((begin? exp) 
          (eval-sequence (begin-actions exp) env))
-        ((cond? exp) (eval (cond->if exp) env))
+        ((cond? exp) (zeval (cond->if exp) env))
         ((application? exp)
-         (apply (eval (operator exp) env)
+         (apply (zeval (operator exp) env)
                 (list-of-values (operands exp) env)))
         (else
          (error "Unknown expression type -- EVAL" exp))));}}}
@@ -194,28 +194,28 @@
 (define (list-of-values exps env);{{{
   (if (no-operands? exps)
       '()
-      (cons (eval (first-operand exps) env)
+      (cons (zeval (first-operand exps) env)
             (list-of-values (rest-operands exps) env))));}}}
 
 (define (eval-if exp env);{{{
-  (if (true? (eval (if-predicate exp) env))
-      (eval (if-consequent exp) env)
-      (eval (if-alternative exp) env)));}}}
+  (if (true? (zeval (if-predicate exp) env))
+      (zeval (if-consequent exp) env)
+      (zeval (if-alternative exp) env)));}}}
 
 (define (eval-sequence exps env);{{{
-  (cond ((last-exp? exps) (eval (first-exp exps) env))
-        (else (eval (first-exp exps) env)
+  (cond ((last-exp? exps) (zeval (first-exp exps) env))
+        (else (zeval (first-exp exps) env)
               (eval-sequence (rest-exps exps) env))));}}}
 
 (define (eval-assignment exp env);{{{
   (set-variable-value! (assignment-variable exp)
-                       (eval (assignment-value exp) env)
+                       (zeval (assignment-value exp) env)
                        env)
   'ok);}}}
 
 (define (eval-definition exp env);{{{
   (define-variable! (definition-variable exp)
-                    (eval (definition-value exp) env)
+                    (zeval (definition-value exp) env)
                     env)
   'ok);}}}
 
@@ -236,28 +236,28 @@
 (define (list-of-values exps env);{{{
   (if (no-operands? exps)
       '()
-      (cons (eval (first-operand exps) env)
+      (cons (zeval (first-operand exps) env)
             (list-of-values (rest-operands exps) env))));}}}
 
 (define (eval-if exp env);{{{
-  (if (true? (eval (if-predicate exp) env))
-      (eval (if-consequent exp) env)
-      (eval (if-alternative exp) env)));}}}
+  (if (true? (zeval (if-predicate exp) env))
+      (zeval (if-consequent exp) env)
+      (zeval (if-alternative exp) env)));}}}
 
 (define (eval-sequence exps env);{{{
-  (cond ((last-exp? exps) (eval (first-exp exps) env))
-        (else (eval (first-exp exps) env)
+  (cond ((last-exp? exps) (zeval (first-exp exps) env))
+        (else (zeval (first-exp exps) env)
               (eval-sequence (rest-exps exps) env))));}}}
 
 (define (eval-assignment exp env);{{{
   (set-variable-value! (assignment-variable exp)
-                       (eval (assignment-value exp) env)
+                       (zeval (assignment-value exp) env)
                        env)
   'ok);}}}
 
 (define (eval-definition exp env);{{{
   (define-variable! (definition-variable exp)
-                    (eval (definition-value exp) env)
+                    (zeval (definition-value exp) env)
                     env)
   'ok);}}}
 
@@ -392,7 +392,7 @@
 (define (driver-loop)
   (prompt-for-input input-prompt)
   (let ((input (read)))
-    (let ((output (eval input the-global-environment)))
+    (let ((output (zeval input the-global-environment)))
       (announce-output output-prompt)
       (user-print output)))
   (driver-loop))
