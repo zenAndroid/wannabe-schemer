@@ -219,49 +219,6 @@
                     env)
   'ok);}}}
 
-(define (apply procedure arguments);{{{
-  (cond ((primitive-procedure? procedure)
-         (apply-primitive-procedure procedure arguments))
-        ((compound-procedure? procedure)
-         (eval-sequence
-           (procedure-body procedure)
-           (extend-environment
-             (procedure-parameters procedure)
-             arguments
-             (procedure-environment procedure))))
-        (else
-         (error
-          "Unknown procedure type -- APPLY" procedure))));}}}
-
-(define (list-of-values exps env);{{{
-  (if (no-operands? exps)
-      '()
-      (cons (zeval (first-operand exps) env)
-            (list-of-values (rest-operands exps) env))));}}}
-
-(define (eval-if exp env);{{{
-  (if (true? (zeval (if-predicate exp) env))
-      (zeval (if-consequent exp) env)
-      (zeval (if-alternative exp) env)));}}}
-
-(define (eval-sequence exps env);{{{
-  (cond ((last-exp? exps) (zeval (first-exp exps) env))
-        (else (zeval (first-exp exps) env)
-              (eval-sequence (rest-exps exps) env))));}}}
-
-(define (eval-assignment exp env);{{{
-  (set-variable-value! (assignment-variable exp)
-                       (zeval (assignment-value exp) env)
-                       env)
-  'ok);}}}
-
-(define (eval-definition exp env);{{{
-  (define-variable! (definition-variable exp)
-                    (zeval (definition-value exp) env)
-                    env)
-  'ok);}}}
-
-
 
 ;;; Evaluator data structures
 
@@ -370,6 +327,9 @@
         (list 'cdr cdr)
         (list 'cons cons)
         (list 'null? null?)
+        (list '< <)
+        (list '> >)
+        (list '= =)
 ;;      more primitives
         ))
 
