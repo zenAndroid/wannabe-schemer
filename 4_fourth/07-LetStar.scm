@@ -19,7 +19,7 @@
   ; process at the time, hopefully my notes are clear enough :sweat:
   (define (iter bindings)
     (if (null? bindings)
-      (sequence->exp (let*-body exp))
+      (let*-body exp)
       (make-let (list (first-binding bindings))
                 (iter (rest-bindings bindings)))))
   (iter (bindings exp)))
