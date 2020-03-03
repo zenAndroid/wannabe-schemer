@@ -155,7 +155,7 @@
 (define (let-exps exp) (map cadr (let-var-exps exp)))
 
 (define (let->combination exp)
-  (cons (make-lambda (let-vars exp) (seq->expr (let-body exp)))
+  (cons (make-lambda (let-vars exp) (sequence->exp (let-body exp)))
         ; Used to use list, but changed to cons, because list creates a new list when cons just extends the old one
         (let-exps exp)))
 
