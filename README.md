@@ -1,5 +1,6 @@
 # Scheming
 ![Structure and Interpretation of Computer Programs](SICP.jpg "SICP banner")
+
 Working through Structure and Interpretation of Computer Programs.
 
 This repo is now being simultaneously posted to [GitLab](https://gitlab.com/zenAndroid/scheming-sicp) and [GitHub](https://github.com/zenAndroid/wannabe-schemer).
