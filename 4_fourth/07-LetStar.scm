@@ -443,6 +443,7 @@
         (list 'null? null?)
         (list '+ +)
         (list '- -)
+        (list '= =)
 ;;      more primitives
         ))
 
