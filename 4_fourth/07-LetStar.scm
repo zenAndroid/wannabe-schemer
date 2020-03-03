@@ -144,7 +144,7 @@
 
 (define (bindings exp) (cadr exp))
 
-(define (let*-body exp) (cddr exp))
+(define (let*-body exp) (cddr exp)) ; 2020-03-02 21:40 :: zenAndroid ::Fucking caddr or cddr man I don't knkow this shit is confucing me man
 
 (define (first-binding bindings) (car bindings))
 
@@ -157,7 +157,7 @@
   ; process at the time, hopefully my notes are clear enough :sweat:
   (define (iter bindings)
     (if (null? bindings)
-      (let*-body exp)
+      (sequence->exp (let*-body exp))
       (make-let (list (first-binding bindings))
                 (iter (rest-bindings bindings)))))
   (iter (bindings exp)))
