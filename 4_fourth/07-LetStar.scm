@@ -80,7 +80,6 @@
 
 ;;;Following are commented out so as not to be evaluated when
 ;;; the file is loaded.
-(display (let*->nested-lets foo))
 
-
-(driver-loop)
+; (display (let*->nested-lets foo))
+; (driver-loop)
