@@ -6,7 +6,7 @@
 
 (define (actual-body exp) (filter not-define? exp))
 
-(define (scan-out-defines exp) (filter definition? exp))
+(define (filter-defines exp) (filter definition? exp))
 
 (define (remove-defines exp) (map cdr exp))
 
@@ -14,8 +14,8 @@
 
 (define (inner-exps exp) (map cadr exp))
 
-(define (inner-definitions-handler exp) ; Wher exp is the body
-  (let* ((lists-of-interest (scan-out-defines exp))
+(define (scan-out-defines exp) ; Wher exp is the body
+  (let* ((lists-of-interest (filter-defines exp))
          (body-exps (actual-body exp))
          (assoc-list (remove-defines lists-of-interest))
          (vars (inner-vars assoc-list))
@@ -34,7 +34,7 @@
 ; since I'll try to elucidate any confusion by running this code and then
 ; coming back here and commenting profusely
 
-(pretty-print (inner-definitions-handler '((define u (+ x 2)) (define v (+ n n2)) (define reee (* 3 f F)) (displayln (* v v v reee reee)))))
+(pretty-print (scan-out-defines '((define u (+ x 2)) (define v (+ n n2)) (define reee (* 3 f F)) (displayln (* v v v reee reee)))))
 
 
 ; (let (((u *unassigned*)
@@ -62,3 +62,32 @@
 ; incremental ...
 
 ; 3rd attempt, I am pleased with this.
+
+
+; 2020-03-04 21:47 :: zenAndroid :: HAHAHAH, I was thinking of making the
+; definition of the helper functions internal, but then I edcided against that
+; because it would be too funny.
+
+(define (zeval exp env);{{{
+  (cond ((self-evaluating? exp) exp)
+        ((variable? exp) (lookup-variable-value exp env))
+        ((quoted? exp) (text-of-quotation exp))
+        ((named-let? exp) (zeval (named-let-handler exp) env))
+        ((let? exp) (zeval (let->combination exp) env))
+        ((letStar? exp) (zeval (let*->nested-lets exp) env))
+        ((while? exp) (zeval (while-exp-handler exp) env))
+        ((assignment? exp) (eval-assignment exp env))
+        ((definition? exp) (eval-definition exp env))
+        ((if? exp) (eval-if exp env))
+        ((lambda? exp)
+         (make-procedure (lambda-parameters exp)
+                         (lambda-body exp)
+                         env))
+        ((begin? exp) 
+         (eval-sequence (begin-actions exp) env))
+        ((cond? exp) (zeval (cond->if exp) env))
+        ((application? exp)
+         (apply (zeval (operator exp) env)
+                (list-of-values (operands exp) env)))
+        (else
+         (error "Unknown expression type -- EVAL" exp))));}}}
