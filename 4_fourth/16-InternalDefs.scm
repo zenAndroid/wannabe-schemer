@@ -8,24 +8,30 @@
 
 (define (only-defines exp) (filter definition? exp))
 
-(define (remove-defines exp) (map cdr exp))
+(define (inner-vars exp) (map definition-variable exp))
 
-(define (inner-vars exp) (map car exp))
-
-(define (inner-exps exp) (map cadr exp))
+(define (inner-exps exp) (map definition-value exp))
 
 (define (scan-out-defines exp) ; Wher exp is the body
   (if (null? (only-defines exp))
     exp
     (let* ((lists-of-interest (only-defines exp))
+           ; ((define u <>)
+           ;  (define v <>))
            (body-exps (actual-body exp))
-           (assoc-list (remove-defines lists-of-interest))
-           (vars (inner-vars assoc-list))
-           (exps (inner-exps assoc-list)))
-      (list 'let
-            (map (lambda(x) (list x ''*unassigned*)) vars)
-            (sequence->exp (map (lambda(x) (append '(set!) x)) assoc-list))
-            (sequence->exp body-exps)))))
+           ; Whatever else (<E3>)
+           (vars (inner-vars lists-of-interest))
+           (exps (inner-exps lists-of-interest)))
+      (append 
+        (list 'let (map (lambda(x) (list x ''*unassigned*)) vars))
+        (make-assignements lists-of-interest)
+        body-exps))))
+
+(define (make-assignements defs)
+  (map
+    (lambda(def) (list 'set! (definition-variable def) (definition-value def)))
+    defs))
+
 
 ; There goes, the first prototype, I am confused as to whether, for example,
 ; when I run (remove-defines X) and I get ((u <E>) (v <E>)) I wonder, should I
@@ -76,32 +82,8 @@
 ; 3rd attempt, I am pleased with this.
 
 ; 2020-03-04 21:47 :: zenAndroid :: HAHAHAH, I was thinking of making the
-; definition of the helper functions internal, but then I edcided against that
+; definition of the helper functions internal, but then I decided against that
 ; because it would be too funny.
-
-; (define (zeval exp env);{{{
-;   (cond ((self-evaluating? exp) exp)
-;         ((variable? exp) (lookup-variable-value exp env))
-;         ((quoted? exp) (text-of-quotation exp))
-;         ((named-let? exp) (zeval (named-let-handler exp) env))
-;         ((let? exp) (zeval (let->combination exp) env))
-;         ((letStar? exp) (zeval (let*->nested-lets exp) env))
-;         ((while? exp) (zeval (while-exp-handler exp) env))
-;         ((assignment? exp) (eval-assignment exp env))
-;         ((definition? exp) (eval-definition exp env))
-;         ((if? exp) (eval-if exp env))
-;         ((lambda? exp)
-;          (make-procedure (lambda-parameters exp)
-;                          (lambda-body exp)
-;                          env))
-;         ((begin? exp) 
-;          (eval-sequence (begin-actions exp) env))
-;         ((cond? exp) (zeval (cond->if exp) env))
-;         ((application? exp)
-;          (apply (zeval (operator exp) env)
-;                 (list-of-values (operands exp) env)))
-;         (else
-;          (error "Unknown expression type -- EVAL" exp))));}}}
 
 (define (make-procedure parameters body env)
   (list 'procedure 
