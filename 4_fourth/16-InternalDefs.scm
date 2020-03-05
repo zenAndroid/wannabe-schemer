@@ -43,6 +43,13 @@
       (define reee (* 3 f F)) 
       (displayln (* v v v reee reee)))))
 
+(display "\n")
+
+(pretty-print 
+  (scan-out-defines 
+    '((displayln (* v v v reee reee)))))
+
+
 ; (let (((u *unassigned*)
 ;        (v *unassigned*)
 ;        (reee *unassigned*)))
