@@ -44,7 +44,7 @@
 ;            (loop))))
 ;      (loop))))
 
-(display (while-exp-handler test-code))
+; (display (while-exp-handler test-code))
 
 ; works , so ¯\_(ツ)_/¯
 
@@ -72,4 +72,4 @@
         (else
          (error "Unknown expression type -- EVAL" exp))));}}}
 
-(driver-loop)
+; (driver-loop)
