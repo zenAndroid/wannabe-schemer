@@ -27,7 +27,6 @@
                 (list-of-values (operands exp) env)))
         (else
          (error "Unknown expression type -- EVAL" exp))));}}}
-
 ; Self-evaluating, variables, and tagged list predicate {{{1 ;
 
 (define (self-evaluating? exp)
@@ -43,7 +42,6 @@
 (define (variable? exp) (symbol? exp))
 
 ; 1}}} ;
-
 ; Quoted expression handler {{{1 ;
 
 (define (quoted? exp)
@@ -52,7 +50,6 @@
 (define (text-of-quotation exp) (cadr exp))
 
 ; 1}}} ;
-
 ; Assignement handler {{{1 ;
 
 (define (assignment? exp)
@@ -62,7 +59,6 @@
 
 (define (assignment-value exp) (caddr exp))
 ; 1}}} ;
-
 ; Definition handler {{{1 ;
 
 (define (definition? exp)
@@ -79,7 +75,6 @@
       (make-lambda (cdadr exp)
                    (cddr exp))))
 ; 1}}} ;
-
 ; Lambda handler {{{1 ;
 
 (define (lambda? exp) (tagged-list? exp 'lambda))
@@ -92,7 +87,6 @@
   (cons 'lambda (cons parameters body)))
 
 ; 1}}} ;
-
 ; If-expression handler {{{1 ;
 
 (define (if? exp) (tagged-list? exp 'if))
@@ -113,7 +107,6 @@
   (list 'if predicate consequent))
 
 ; 1}}} ;
-
 ; Compound sequences of expressions handler {{{1 ;
 
 (define (begin? exp) (tagged-list? exp 'begin))
@@ -132,7 +125,6 @@
 (define (make-begin seq) (cons 'begin seq))
 
 ; 1}}} ;
-
 ; Procedure application handler {{{1 ;
 
 (define (application? exp) (pair? exp))
@@ -144,7 +136,6 @@
 (define (rest-operands ops) (cdr ops))
 
 ; 1}}} ;
-
 ; Cond expression handler {{{1 ;
 
 (define (cond? exp) (tagged-list? exp 'cond))
@@ -176,7 +167,6 @@
                      (expand-clauses rest))))))
 
 ; 1}}} ;
-
 (define (apply procedure arguments);{{{
   (cond ((primitive-procedure? procedure)
          (apply-primitive-procedure procedure arguments))
@@ -190,29 +180,24 @@
         (else
          (error
           "Unknown procedure type -- APPLY" procedure))));}}}
-
 (define (list-of-values exps env);{{{
   (if (no-operands? exps)
       '()
       (cons (zeval (first-operand exps) env)
             (list-of-values (rest-operands exps) env))));}}}
-
 (define (eval-if exp env);{{{
   (if (true? (zeval (if-predicate exp) env))
       (zeval (if-consequent exp) env)
       (zeval (if-alternative exp) env)));}}}
-
 (define (eval-sequence exps env);{{{
   (cond ((last-exp? exps) (zeval (first-exp exps) env))
         (else (zeval (first-exp exps) env)
               (eval-sequence (rest-exps exps) env))));}}}
-
 (define (eval-assignment exp env);{{{
   (set-variable-value! (assignment-variable exp)
                        (zeval (assignment-value exp) env)
                        env)
   'ok);}}}
-
 (define (eval-definition exp env);{{{
   (define-variable! (definition-variable exp)
                     (zeval (definition-value exp) env)
