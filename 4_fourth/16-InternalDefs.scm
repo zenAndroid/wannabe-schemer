@@ -21,9 +21,9 @@
          (vars (inner-vars assoc-list))
          (exps (inner-exps assoc-list)))
     (list 'let
-          (list (map (lambda(x) (list x '*unassigned*)) vars))
-          (map (lambda(x) (append '(set!) x)) assoc-list)
-          body-exps)))
+          (map (lambda(x) (list x '*unassigned*)) vars)
+          (sequence->exp (map (lambda(x) (append '(set!) x)) assoc-list))
+          (sequence->exp body-exps))))
 
 ; There goes, the first prototype, I am confused as to whether, for example,
 ; when I run (remove-defines X) and I get ((u <E>) (v <E>)) I wonder, should I
@@ -46,3 +46,17 @@
 ;   ((displayln (* v v v reee reee))))
 
 ; Result of running it, I hope I learn from this.
+
+
+; (let ((u *unassigned*)
+;       (v *unassigned*)
+;       (reee *unassigned*))
+;   (begin
+;     (set! u (+ x 2))
+;     (set! v (+ n n2))
+;     (set! reee (* 3 f F)))
+;   (displayln (* v v v reee reee)))
+
+; 2nd attempt, good, it is improvement, altho I would prefer if I found a way
+; without having to use (begin ...), but I suppose improvement are slow and
+; incremental ...
