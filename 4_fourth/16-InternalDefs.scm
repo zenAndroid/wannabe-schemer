@@ -21,7 +21,7 @@
          (vars (inner-vars assoc-list))
          (exps (inner-exps assoc-list)))
     (list 'let
-          (map (lambda(x) (list x '*unassigned*)) vars)
+          (map (lambda(x) (list x ''*unassigned*)) vars)
           (sequence->exp (map (lambda(x) (append '(set!) x)) assoc-list))
           (sequence->exp body-exps))))
 
@@ -60,3 +60,5 @@
 ; 2nd attempt, good, it is improvement, altho I would prefer if I found a way
 ; without having to use (begin ...), but I suppose improvement are slow and
 ; incremental ...
+
+; 3rd attempt, I am pleased with this.
