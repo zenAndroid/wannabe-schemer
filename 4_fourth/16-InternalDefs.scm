@@ -22,10 +22,10 @@
            ; Whatever else (<E3>)
            (vars (inner-vars lists-of-interest))
            (exps (inner-exps lists-of-interest)))
-      (append 
-        (list 'let (map (lambda(x) (list x ''*unassigned*)) vars))
-        (make-assignements lists-of-interest)
-        body-exps))))
+      (list (append
+              (list 'let (map (lambda(x) (list x ''*unassigned*)) vars))
+              (make-assignements lists-of-interest)
+              body-exps)))))
 
 (define (make-assignements defs)
   (map
