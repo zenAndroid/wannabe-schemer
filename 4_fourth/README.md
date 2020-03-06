@@ -9,7 +9,7 @@
 - Exercise 4.13: I just straight up skipped this.
 
 - Exercise 4.16:
-<details>
+```
 Struggled with this one a lot, not besause the syntax transformation was hard or anything, I meam there was a trick to it (remember that little fallacy you made where you did not consider the fact the the variable could be a procedure), but it was rather simple in the end.
 What was realy tricky for me was that I didn't recognize that my intial way of doing it was mistaken (see two commits prior to this one), because apparently I needed to nest what I wrote in yet ANOTHER pair of parens.
 
@@ -23,4 +23,4 @@ Also remember that when apply applies a compound procedure, it sequentially eval
 However, by adding the application parens the specific line in the evaluator that takes care of this is the `eval (operator exp) emv`, *it evaluates the let expression*, thereby producing the code that is to be evaluated. And produces the expected result.
 
 Thank you for coming to my TED talk.
-</details>
+```
