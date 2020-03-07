@@ -10,9 +10,13 @@
 ; and ran (fib 25) on the naive and analyzed version five times (not much but
 ; still gave me an idea)
 ; 
-; Naive         | Analyzed | 1- 35 seconds | 1- 21 seconds 2- 32 seconds | 2-
-; 20 seconds 3- 33 seconds | 3- 20 seconds 4- 33 seconds | 4- 20 seconds 5- 33
-; seconds | 5- 21 seconds
+; Naive         | Analyzed 
+;               | 
+; 1- 35 seconds | 1- 21 seconds 
+; 2- 32 seconds | 2- 20 seconds
+; 3- 33 seconds | 3- 20 seconds
+; 4- 33 seconds | 4- 20 seconds
+; 5- 33 seconds | 5- 21 seconds
 ; 
 ; 
 ; So yeah, thats a slight improvement I suppose.
