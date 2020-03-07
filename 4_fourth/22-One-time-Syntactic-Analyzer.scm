@@ -85,6 +85,7 @@
         ((definition? exp) (analyze-definition exp))
         ((if? exp) (analyze-if exp))
         ((lambda? exp) (analyze-lambda exp))
+        ((let? exp) (zeval (let->combination exp) env))
         ((begin? exp) (analyze-sequence (begin-actions exp)))
         ((cond? exp) (analyze (cond->if exp)))
         ((application? exp) (analyze-application exp))
@@ -226,6 +227,24 @@
 
 (define (make-lambda parameters body)
   (cons 'lambda (cons parameters body)))
+
+; 1}}} ;
+; Let Form handler {{{1 ;
+
+(define (let? exp) (tagged-list? exp 'let))
+
+(define (let-var-exps exp) (cadr exp))
+
+(define (let-body exp) (cddr exp))
+
+(define (let-vars exp) (map car (let-var-exps exp)))
+
+(define (let-exps exp) (map cadr (let-var-exps exp)))
+
+(define (let->combination exp)
+  (cons (make-lambda (let-vars exp) (let-body exp))
+        ; Used to use list, but changed to cons, because list creates a new list when cons just extends the old one
+        (let-exps exp)))
 
 ; 1}}} ;
 ; If-expression handler {{{1 ;
