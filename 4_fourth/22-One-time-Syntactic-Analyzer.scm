@@ -85,7 +85,7 @@
         ((definition? exp) (analyze-definition exp))
         ((if? exp) (analyze-if exp))
         ((lambda? exp) (analyze-lambda exp))
-        ((let? exp) (zeval (let->combination exp) env))
+        ((let? exp) (analyze (let->combination exp)))
         ((begin? exp) (analyze-sequence (begin-actions exp)))
         ((cond? exp) (analyze (cond->if exp)))
         ((application? exp) (analyze-application exp))
