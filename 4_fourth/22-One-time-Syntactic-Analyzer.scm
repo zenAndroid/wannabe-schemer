@@ -1,32 +1,165 @@
-; 2020-03-01 16:58 :: zenAndroid :: Here's hoping for everything working out
-; smoothly
-; I think I may reorder the way the functions definitions occur in the book,
-; such that all the helper functions used in apply will be apparent right next
-; to it
+; 2020-03-06 22:20 :: zenAndroid :: Uuuhh, gotta be honest here i'm not 100%
+; sure I understand how the analyzer works, I mean, does it really pass on each
+; S-expression once ? and if so how does it do that with no state, or maybe
+; those lets that come before the lambda *are* implicit state ? idk, I'm led to
+; believe so ... will think about it ...
+
+; 2020-03-06 22:51 :: zenAndroid :: OH SHIT NOW I GET IT, fuck DMN THATS COOL
+; 2020-03-06 22:51 :: zenAndroid ::  Wait no I don't ...
+; 2020-03-06 22:51 :: zenAndroid ::  Now, hold on, I thnk if I make my thoughts
+; explicit on this i'd understand better, or explain this , yep I think I got
+; it, zen, think of it in terms of the environment diagrams and stuff like
+; that, following is an attempt at explaining it that should make it clearer.
+
+
+; I will just copy the explanation from somewhere else, I think it is close
+; enough to the understanding that it shouldnt matter much ...
+
+; To understand what the analyzer does, have another look at analyze-if:
+; 
+; ; ; ; ; ; (define (analyze-if exp)
+; ; ; ; ; ;   (let ((pproc (analyze (if-predicate exp)))
+; ; ; ; ; ;         (cproc (analyze (if-consequent exp)))
+; ; ; ; ; ;         (aproc (analyze (if-alternative exp))))
+; ; ; ; ; ;     (lambda (env)
+; ; ; ; ; ;       (if (true? (pprocenv))
+; ; ; ; ; ;         (cprocenv)
+; ; ; ; ; ;         (aprocenv)))))
+; 
+; The returned value is a procedure derived from evaluating
+; 
+; (lambda (env)
+;   (if (true? (pprocenv))
+;     (cprocenv)
+;     (aprocenv)))))
+; 
+; in an environment where pproc, cproc and aproc are defined.
+
+
+
+
+
+
+
+
+
+
+; I hope that helped, and if there is still some confusion, think of it in
+; terms of the box diagrams of environment, evaluating (analyze-if) leaves you
+; with an environment (box) where pproc, cproc and aproc are defined already.
+
+
+; I have to say tho, when (analyze-if '(if (foo) (bar) (baz))) gets called,
+; and the thingy with the environment thing happens,
+
+; ... *how does the next call to (analyze-if '(if (foo) (bar) (baz))) "know" to
+; get the value from the environment created previously and not run the
+; analyzer on the components of the if exxpression again ?
+
+
+
+
+
+
+
+; Well, I don't really want to confuse myself here, so instead of trying to be
+; "efficient" or "elegant", i'll just copy all the code from the base
+; meta-circular evaluator ...
+
 
 (define apply-in-underlying-scheme apply)
 
-;;;SECTION 4.1.1
+(define (zeval exp env)
+  ((analyze exp) env))
 
-(define (zeval exp env);{{{
-  (cond ((self-evaluating? exp) exp)
-        ((variable? exp) (lookup-variable-value exp env))
-        ((quoted? exp) (text-of-quotation exp))
-        ((assignment? exp) (eval-assignment exp env))
-        ((definition? exp) (eval-definition exp env))
-        ((if? exp) (eval-if exp env))
-        ((lambda? exp)
-         (make-procedure (lambda-parameters exp)
-                         (lambda-body exp)
-                         env))
-        ((begin? exp) 
-         (eval-sequence (begin-actions exp) env))
-        ((cond? exp) (zeval (cond->if exp) env))
-        ((application? exp)
-         (apply (zeval (operator exp) env)
-                (list-of-values (operands exp) env)))
+(define (analyze exp)
+  (cond ((self-evaluating? exp) 
+         (analyze-self-evaluating exp))
+        ((quoted? exp) (analyze-quoted exp))
+        ((variable? exp) (analyze-variable exp))
+        ((assignment? exp) (analyze-assignment exp))
+        ((definition? exp) (analyze-definition exp))
+        ((if? exp) (analyze-if exp))
+        ((lambda? exp) (analyze-lambda exp))
+        ((begin? exp) (analyze-sequence (begin-actions exp)))
+        ((cond? exp) (analyze (cond->if exp)))
+        ((application? exp) (analyze-application exp))
         (else
-         (error "Unknown expression type -- EVAL" exp))));}}}
+         (error "Unknown expression type -- ANALYZE" exp))))
+
+(define (analyze-self-evaluating exp)
+  (lambda (env) exp))
+
+(define (analyze-quoted exp)
+  (let ((qval (text-of-quotation exp)))
+    (lambda (env) qval)))
+
+(define (analyze-variable exp)
+  (lambda (env) (lookup-variable-value exp env)))
+
+(define (analyze-assignment exp)
+  (let ((var (assignment-variable exp))
+        (vproc (analyze (assignment-value exp))))
+    (lambda (env)
+      (set-variable-value! var (vproc env) env)
+      'ok)))
+
+(define (analyze-definition exp)
+  (let ((var (definition-variable exp))
+        (vproc (analyze (definition-value exp))))
+    (lambda (env)
+      (define-variable! var (vproc env) env)
+      'ok)))
+
+(define (analyze-if exp)
+  (let ((pproc (analyze (if-predicate exp)))
+        (cproc (analyze (if-consequent exp)))
+        (aproc (analyze (if-alternative exp))))
+    (lambda (env)
+      (if (true? (pproc env))
+          (cproc env)
+          (aproc env)))))
+
+(define (analyze-lambda exp)
+  (let ((vars (lambda-parameters exp))
+        (bproc (analyze-sequence (lambda-body exp))))
+    (lambda (env) (make-procedure vars bproc env))))
+
+(define (analyze-sequence exps)
+  (define (sequentially proc1 proc2)
+    (lambda (env) (proc1 env) (proc2 env)))
+  (define (loop first-proc rest-procs)
+    (if (null? rest-procs)
+        first-proc
+        (loop (sequentially first-proc (car rest-procs))
+              (cdr rest-procs))))
+  (let ((procs (map analyze exps)))
+    (if (null? procs)
+        (error "Empty sequence -- ANALYZE"))
+    (loop (car procs) (cdr procs))))
+
+(define (analyze-application exp)
+  (let ((fproc (analyze (operator exp)))
+        (aprocs (map analyze (operands exp))))
+    (lambda (env)
+      (execute-application (fproc env)
+                           (map (lambda (aproc) (aproc env))
+                                aprocs)))))
+
+(define (execute-application proc args)
+  (cond ((primitive-procedure? proc)
+         (apply-primitive-procedure proc args))
+        ((compound-procedure? proc)
+         ((procedure-body proc)
+          (extend-environment (procedure-parameters proc)
+                              args
+                              (procedure-environment proc))))
+        (else
+         (error
+          "Unknown procedure type -- EXECUTE-APPLICATION"
+          proc))))
+
+
 ; Self-evaluating, variables, and tagged list predicate {{{1 ;
 
 (define (self-evaluating? exp)
@@ -363,7 +496,6 @@
 ;;; the file is loaded.
 (define the-global-environment (setup-environment))
 ; (driver-loop)
-
 (zeval '(define (f n)
           (if (= n 0)
             1
@@ -375,21 +507,20 @@
 (display "The time it took for calculating the factorial of (whatever you put in the code) is: ")
 (display time)
 (newline)
-; (driver-loop)
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;  The factorial calculated was 500000. It took 684 minutes, so like, 600 + 60 + 24 = 11 min 24 sec  ;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Here's hoping for less than 11 mins .. hopefully significantly so ..
+; ; ; ; ; ; guile -l 22-One-time-Syntactic-Analyzer.scm
+; ; ; ; ; ; 
+; ; ; ; ; ; The time it took for calculating the factorial of (whatever you put in the code) is: 683
+; ; ; ; ; ; GNU Guile 2.2.6
+; ; ; ; ; ; Copyright (C) 1995-2019 Free Software Foundation, Inc.
+; ; ; ; ; ; 
+; ; ; ; ; ; Guile comes with ABSOLUTELY NO WARRANTY; for details type `,show w'.
+; ; ; ; ; ; This program is free software, and you are welcome to redistribute it
+; ; ; ; ; ; under certain conditions; type `,show c' for details.
+; ; ; ; ; ; 
+; ; ; ; ; ; Enter `,help' for help.
+; ; ; ; ; ; scheme@(guile-user)>
+; ; ; ; ; ; 
 
-; ; ; ; ; ; ; ; guile -l 00-The-Actual-Meta-Eval.scm
-; ; ; ; ; ; ; ; 
-; ; ; ; ; ; ; ; The time it took for calculating the factorial of (whatever you put in the code) is: 684
-; ; ; ; ; ; ; ; GNU Guile 2.2.6
-; ; ; ; ; ; ; ; Copyright (C) 1995-2019 Free Software Foundation, Inc.
-; ; ; ; ; ; ; ; 
-; ; ; ; ; ; ; ; Guile comes with ABSOLUTELY NO WARRANTY; for details type `,show w'.
-; ; ; ; ; ; ; ; This program is free software, and you are welcome to redistribute it
-; ; ; ; ; ; ; ; under certain conditions; type `,show c' for details.
-; ; ; ; ; ; ; ; 
-; ; ; ; ; ; ; ; Enter `,help' for help.
-; ; ; ; ; ; ; ; scheme@(guile-user)>
-; ; ; ; ; ; ; ; 
+; This is weird, its almost the same as the normal version, (684 seconds),
+; kinda creepy and probably indicative of something deeper going on ... 
