@@ -340,7 +340,9 @@
 (define (driver-loop)
   (prompt-for-input input-prompt)
   (let ((input (read)))
+    (define duration (current-time))
     (let ((output (zeval input the-global-environment)))
+      (newline) (display (list "Time taken: " (- (current-time) duration))) (newline)
       (announce-output output-prompt)
       (user-print output)))
   (driver-loop))
@@ -364,18 +366,6 @@
 (define the-global-environment (setup-environment))
 ; (driver-loop)
 
-(zeval '(define (f n)
-          (if (= n 0)
-            1
-            (* n (f (- n 1))))) the-global-environment)
-(define time (current-time))
-(zeval '(f 500000) the-global-environment)
-(set! time (- (current-time) time))
-(newline)
-(display "The time it took for calculating the factorial of (whatever you put in the code) is: ")
-(display time)
-(newline)
-; (driver-loop)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;  The factorial calculated was 500000. It took 684 minutes, so like, 600 + 60 + 24 = 11 min 24 sec  ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

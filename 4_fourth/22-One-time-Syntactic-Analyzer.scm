@@ -1,3 +1,4 @@
+; Comments {{{1 ;
 ; 2020-03-06 22:20 :: zenAndroid :: Uuuhh, gotta be honest here i'm not 100%
 ; sure I understand how the analyzer works, I mean, does it really pass on each
 ; S-expression once ? and if so how does it do that with no state, or maybe
@@ -5,8 +6,8 @@
 ; believe so ... will think about it ...
 
 ; 2020-03-06 22:51 :: zenAndroid :: OH SHIT NOW I GET IT, fuck DMN THATS COOL
-; 2020-03-06 22:51 :: zenAndroid ::  Wait no I don't ...
-; 2020-03-06 22:51 :: zenAndroid ::  Now, hold on, I thnk if I make my thoughts
+; 2020-03-06 22:51 :: zenAndroid :: Wait no I don't ...
+; 2020-03-06 22:51 :: zenAndroid :: Now, hold on, I thnk if I make my thoughts
 ; explicit on this i'd understand better, or explain this , yep I think I got
 ; it, zen, think of it in terms of the environment diagrams and stuff like
 ; that, following is an attempt at explaining it that should make it clearer.
@@ -65,13 +66,16 @@
 ; Well, I don't really want to confuse myself here, so instead of trying to be
 ; "efficient" or "elegant", i'll just copy all the code from the base
 ; meta-circular evaluator ...
-
+; 1}}} ;
 
 (define apply-in-underlying-scheme apply)
 
 (define (zeval exp env)
   ((analyze exp) env))
 
+; Analyzer code {{{1 ;
+
+; The analuze function {{{2 ;
 (define (analyze exp)
   (cond ((self-evaluating? exp) 
          (analyze-self-evaluating exp))
@@ -86,7 +90,9 @@
         ((application? exp) (analyze-application exp))
         (else
          (error "Unknown expression type -- ANALYZE" exp))))
+; 2}}} ;
 
+; Expression/Sub-expressions {{{2 ;
 (define (analyze-self-evaluating exp)
   (lambda (env) exp))
 
@@ -158,7 +164,9 @@
          (error
           "Unknown procedure type -- EXECUTE-APPLICATION"
           proc))))
+; 2}}} ;
 
+; 1}}} ;
 
 ; Self-evaluating, variables, and tagged list predicate {{{1 ;
 
@@ -337,8 +345,7 @@
                     env)
   'ok);}}}
 
-
-;;; Evaluator data structures
+; Evaluator data structures {{{1 ;
 
 (define (true? x)
   (not (eq? x #f)))
@@ -421,8 +428,9 @@
             (else (scan (cdr vars) (cdr vals)))))
     (scan (frame-variables frame)
           (frame-values frame))))
+; 1}}} ;
 
-;;;SECTION 4.1.4
+; Section 4.1.4 {{{1 ;
 
 (define (setup-environment)
   (let ((initial-env
@@ -473,7 +481,9 @@
 (define (driver-loop)
   (prompt-for-input input-prompt)
   (let ((input (read)))
+    (define durationtime (current-time))
     (let ((output (zeval input the-global-environment)))
+      (newline) (display (list "Time taken: " (- (current-time) durationtime))) (newline)
       (announce-output output-prompt)
       (user-print output)))
   (driver-loop))
@@ -492,21 +502,12 @@
                      '<procedure-env>))
       (display object)))
 
-;;;Following are commented out so as not to be evaluated when
-;;; the file is loaded.
+; 1}}} ;
+
+
 (define the-global-environment (setup-environment))
 ; (driver-loop)
-(zeval '(define (f n)
-          (if (= n 0)
-            1
-            (* n (f (- n 1))))) the-global-environment)
-(define time (current-time))
-(zeval '(f 500000) the-global-environment)
-(set! time (- (current-time) time))
-(newline)
-(display "The time it took for calculating the factorial of (whatever you put in the code) is: ")
-(display time)
-(newline)
+
 ; Here's hoping for less than 11 mins .. hopefully significantly so ..
 ; ; ; ; ; ; guile -l 22-One-time-Syntactic-Analyzer.scm
 ; ; ; ; ; ; 
@@ -524,3 +525,4 @@
 
 ; This is weird, its almost the same as the normal version, (684 seconds),
 ; kinda creepy and probably indicative of something deeper going on ... 
+
