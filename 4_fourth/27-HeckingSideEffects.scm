@@ -179,3 +179,44 @@
 ;;; ;;; ;;; 
 ;;; ;;; ;;; ;;; L-Eval input:
 ;;; ;;; ;;; 
+
+
+
+
+
+; ANd I just wanted to confirm something really quick so I tried this :
+
+;; ;; ;;; L-Eval input:
+;; ;; (define w (id 10))
+;; ;; 
+;; ;; ;;; L-Eval value:
+;; ;; ok
+;; ;; 
+;; ;; ;;; L-Eval input:
+;; ;; f
+;; ;; 
+;; ;; ;;; L-Eval value:
+;; ;; 1
+;; ;; 
+;; ;; ;;; L-Eval input:
+;; ;; w
+;; ;; 
+;; ;; ;;; L-Eval value:
+;; ;; 10
+;; ;; 
+;; ;; ;;; L-Eval input:
+;; ;; f
+;; ;; 
+;; ;; ;;; L-Eval value:
+;; ;; 1
+;; ;; 
+;; ;; ;;; L-Eval input:
+;; ;; 
+
+; So, yes, an application in a definition always executes immediately, i'd have
+; thought not ...
+
+; Which makes the exercise understandable ...
+; The second value of f stays one since w (before being printed) is still a
+; thunk , then it gets forced, but you don't go through I'd again so no
+; incrementation happening.
