@@ -37,3 +37,5 @@ expression*, thereby producing the code that is to be evaluated. And produces
 the expected result.
 
 Thank you for coming to my TED talk.  ```
+
+- Exercise 4.31: Skipping for now, but YOU NEED TO COME BACK AND TRY THIS.
