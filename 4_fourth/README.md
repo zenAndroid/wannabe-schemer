@@ -38,4 +38,7 @@ the expected result.
 
 Thank you for coming to my TED talk.  ```
 
+- The lazy evaluation exercises were a bit weird and confusing, maybe you need
+  to review this.
+- Lazy evaluation and side effects don't mix well.
 - Exercise 4.31: Skipping for now, but YOU NEED TO COME BACK AND TRY THIS.
