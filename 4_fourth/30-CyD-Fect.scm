@@ -3,7 +3,8 @@
 ; very confusing to me.
 
 
-I did not solve this exercise, I have seen Eli's explanation on his website, I have understoof it, but this area remains a bit dodgy in my mind.
+; I did not solve this exercise, I have seen Eli's explanation on his website,
+; I have understoof it, but this area remains a bit dodgy in my mind.
 
 ; a. eval. is called on each expression of the sequence. Since for-each uses
 ; begin which is evaluated as a sequence, each iteration of the for-each is

@@ -220,3 +220,12 @@
 ; The second value of f stays one since w (before being printed) is still a
 ; thunk , then it gets forced, but you don't go through I'd again so no
 ; incrementation happening.
+
+
+
+; 2020-03-12 20:10 :: zenAndroid ::  All of this makes sense you sleep deprived
+; idiot, it all makes perfect sense, you were just too dense.
+
+; The reason why the (id (id 10) executed the body once was that because IT WAS
+; A DEFINITION VALUE SO IT GOT PASSED TO THE DEFINITION PROCEDURE, WHICH
+; DIRECTLY EVALUATED THE EXPRESSION IT GETS.
