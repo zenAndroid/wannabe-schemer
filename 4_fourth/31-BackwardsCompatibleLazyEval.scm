@@ -62,26 +62,6 @@
 ; the way ... hopefully
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 ; 2020-03-14 14:43 :: zenAndroid :: Yo wassup I'm listening to 28 days later
 ; theme we finna die yEEEeeeEEeEt .. I'm scared help.
 
@@ -89,10 +69,42 @@
 ; reasonable to  me), is: 
 
 ; 1. Changing the evaluation clause for application such that list-of-values
-;    recieves also the structure of the formal parameters so that it knows which arg to evaluate and which to delay.
-; 2. Changing the definition of list-of-values so that it accounts for the change above.
+;    recieves also the structure of the formal parameters so that it knows
+;    which arg to evaluate and which to delay.
+
+; 2. Changing the definition of list-of-values so that it accounts for the
+;    change above.
+
 ; 3. Making a slight modification to apply in the compound procedure clause,
-;    because right now when environment extension takes place we bind the parameters to their values,
-;    now that the representation of the args has changed (they now have the 'lazy' or 'lazy-memo' decorator)
-;    I will have to change the body of the environment extension thingy, it wont be complicated,
-;    only mapping through the formal parameters' old representation and picking out the actual variable names.
+;    because right now when environment extension takes place we bind the
+;    parameters to their values, now that the representation of the args has
+;    changed (they now have the 'lazy' or 'lazy-memo' decorator) I will have to
+;    change the body of the environment extension thingy, it wont be complicated,
+;    only mapping through the formal parameters' old representation and picking
+;    out the actual variable names.
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;  First: application clause editing in zeval implementation  ;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+(define (zeval exp env)
+  (cond ((self-evaluating? exp) exp)
+        ((variable? exp) (lookup-variable-value exp env))
+        ((quoted? exp) (text-of-quotation exp))
+        ((assignment? exp) (eval-assignment exp env))
+        ((definition? exp) (eval-definition exp env))
+        ((if? exp) (eval-if exp env))
+        ((lambda? exp)
+         (make-procedure (lambda-parameters exp)
+                         (lambda-body exp)
+                         env))
+        ((begin? exp) 
+         (eval-sequence (begin-actions exp) env))
+        ((cond? exp) (zeval (cond->if exp) env))
+        ((application? exp)
+         (apply (zeval (operator exp) env)
+                (list-of-values (operands exp) env)))
+        (else
+         (error "Unknown expression type -- EVAL" exp))))
