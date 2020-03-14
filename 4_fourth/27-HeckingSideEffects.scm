@@ -105,7 +105,6 @@
          (thunk-value obj))
         (else obj)))
 
-
 ;; A longer list of primitives -- suitable for running everything in 4.2
 ;; Overrides the list in ch4-mceval.scm
 
@@ -115,13 +114,13 @@
         (list 'cons cons)
         (list 'null? null?)
         (list 'list list)
+        (list 'newline newline)
+        (list 'display display)
         (list '+ +)
         (list '- -)
         (list '* *)
         (list '/ /)
         (list '= =)
-        (list 'newline newline)
-        (list 'display display)
 ;;      more primitives
         ))
 
@@ -229,3 +228,4 @@
 ; The reason why the (id (id 10) executed the body once was that because IT WAS
 ; A DEFINITION VALUE SO IT GOT PASSED TO THE DEFINITION PROCEDURE, WHICH
 ; DIRECTLY EVALUATED THE EXPRESSION IT GETS.
+
