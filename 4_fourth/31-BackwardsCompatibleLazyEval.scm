@@ -20,7 +20,7 @@
 ; that'll hold this information for me so I can know what and when to delay/
 ; force.
 
-; Just as a real-ise case, we'll get an s-expression of this sort: 
+; Just as a real-use case, we'll get an s-expression of this sort: 
 ; (f arg1 arg2 arg3 arg4)
 ; , and when evaluating it we want to apply f to the list of the
 ; modified eventual arguments 
@@ -149,4 +149,4 @@
         (else
          (error "Unknown procedure type -- APPLY" procedure))))
 
-(driver-loop)
+; (driver-loop)
