@@ -126,6 +126,11 @@
           (cons (zeval (car exps) env)
                 (list-of-values (cdr formal-parameters) (cdr exps) env)))))
 
+(define (var-name-extractor datum)
+  (if (pair? datum)
+    (car datum)
+    datum))
+
 (define (apply procedure arguments)
   (cond ((primitive-procedure? procedure)
          (apply-primitive-procedure procedure arguments))
