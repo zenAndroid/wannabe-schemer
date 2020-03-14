@@ -85,7 +85,9 @@
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;                                                             ;
 ;  First: application clause editing in zeval implementation  ;
+;                                                             ; 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
@@ -104,7 +106,8 @@
          (eval-sequence (begin-actions exp) env))
         ((cond? exp) (zeval (cond->if exp) env))
         ((application? exp)
-         (apply (zeval (operator exp) env)
-                (list-of-values (operands exp) env)))
+         (let ((procedure (zeval (operator exp) env)))
+           (apply procedure
+                  (list-of-values (procedure-parameters procedure) (operands exp) env))))
         (else
          (error "Unknown expression type -- EVAL" exp))))
