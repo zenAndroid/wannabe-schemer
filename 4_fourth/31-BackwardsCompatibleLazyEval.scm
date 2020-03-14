@@ -138,7 +138,7 @@
          (eval-sequence
            (procedure-body procedure)
            (extend-environment
-             (procedure-parameters procedure)
+             (map var-name-extractor (procedure-parameters procedure))
              arguments
              (procedure-environment procedure))))
         (else
