@@ -33,8 +33,6 @@
 ; This might require me to change how a definition s-expression is handled on
 ; the evaluator level as well :thonking:
 
-(define f (
-(definiton?) 
 
 ; 2020-03-13 21:21 :: zenAndroid :: Actually hmm maybe I don't have to touch
 ; the evaluation step at all ... :thinking:
@@ -111,3 +109,19 @@
                   (list-of-values (procedure-parameters procedure) (operands exp) env))))
         (else
          (error "Unknown expression type -- EVAL" exp))))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;                                                                                 ;
+;  Second: Changing the definition of list-of-values to mirror the change above.  ;
+;                                                                                 ;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(define (list-of-values formal-parameters exps env)
+  (cond ((or (null? formal-parameters) (null? exps)) '())
+        ((pair? (car formal-parameters))
+         (cons (delay-it (car exps) env)
+               (list-of-values (cdr formal-parameters) (cdr exps) env)))
+        (else
+          (cons (zeval (car exps) env)
+                (list-of-values (cdr formal-parameters) (cdr exps) env)))))
