@@ -81,6 +81,10 @@
 ;    only mapping through the formal parameters' old representation and picking
 ;    out the actual variable names.
 
+(define (force-it obj)
+  (if (thunk? obj)
+      (actual-value (thunk-exp obj) (thunk-env obj))
+      obj))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;                                                             ;
@@ -127,9 +131,10 @@
                 (list-of-values (cdr formal-parameters) (cdr exps) env)))))
 
 (define (var-name-extractor datum)
-  (if (pair? datum)
-    (car datum)
-    datum))
+  (cond ((null? datum) (error (list "Empty datum --" datum)))
+        ((pair? datum) (car datum))
+        (else datum)))
+
 
 (define (apply procedure arguments)
   (cond ((primitive-procedure? procedure)
@@ -142,5 +147,6 @@
              arguments
              (procedure-environment procedure))))
         (else
-         (error
-          "Unknown procedure type -- APPLY" procedure))))
+         (error "Unknown procedure type -- APPLY" procedure))))
+
+(driver-loop)
