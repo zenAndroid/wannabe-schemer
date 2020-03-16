@@ -42,3 +42,8 @@
           (define y (integral dy y0 dt))
           (define dy (map f y))
           y) the-global-environment)
+
+
+; The answer to the actual question is kind of given by the textbook itself.
+; The difference is that even the first element of a pair is delayes, which
+; allows for creation of infinte datastructure like infinitely deep trees.
