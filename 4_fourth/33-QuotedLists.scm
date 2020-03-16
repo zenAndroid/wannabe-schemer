@@ -1,5 +1,7 @@
 ; 2020-03-16 17:48 :: zenAndroid :: Huh, ... should be rather easy no ?
 
+(load "32-LazyLists.scm")
+
 ; Exercise 4.33: Ben Bitdiddle tests the lazy list implementation given above
 ; by evaluating the expression
 
@@ -13,7 +15,7 @@
 
 
 ; 2020-03-16 18:01 :: zenAndroid :: I think I an beginning to understand whta is going on.
-The evaluation of (quote (1 2 3)) yields (1 2 3) which is a list.
+; The evaluation of (quote (1 2 3)) yields (1 2 3) which is a list.
 
 ; A list that is conforming to the underlying Lisp's specification of list, IE
 ; list constructed by the cons that is not the one WE care about.
