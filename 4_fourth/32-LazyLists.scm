@@ -1,9 +1,15 @@
 (load "27-HeckingSideEffects.scm")
 
 
-(zeval '(define (cons x y) (lambda(m) (m x y))) the-global-environment)
-(zeval '(define (car z) (z (lambda(p q) p))) the-global-environment)
-(zeval '(define (cdr z) (z (lambda(p q) q))) the-global-environment)
+(zeval '(define (cons x y)
+          (lambda(m)
+            (m x y))) the-global-environment)
+
+(zeval '(define (car z)
+          (z (lambda(p q) p))) the-global-environment)
+
+(zeval '(define (cdr z) 
+          (z (lambda(p q) q))) the-global-environment)
 
 (zeval '(define (list-ref items n) 
           (if (= n 0)
