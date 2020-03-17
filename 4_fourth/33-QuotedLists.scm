@@ -37,4 +37,29 @@
 ; Didnt want to complicate my life further by using folds or something
 ; Also does not help that I do not have fold implemented in the first place
 
+(define (quotation-handler quotation-text)
+  (if (pair? quotation-text)
+    (cons-construcotr quotation-text)
+    quotation-text))
+
+(define (zeval exp env)
+  (cond ((self-evaluating? exp) exp)
+        ((variable? exp) (lookup-variable-value exp env))
+        ((quoted? exp) (quotation-handler exp))
+        ((assignment? exp) (eval-assignment exp env))
+        ((definition? exp) (eval-definition exp env))
+        ((if? exp) (eval-if exp env))
+        ((lambda? exp)
+         (make-procedure (lambda-parameters exp)
+                         (lambda-body exp)
+                         env))
+        ((begin? exp) 
+         (eval-sequence (begin-actions exp) env))
+        ((cond? exp) (zeval (cond->if exp) env))
+        ((application? exp)             ; clause from book
+         (apply (actual-value (operator exp) env)
+                (operands exp)
+                env))
+        (else
+         (error "Unknown expression type -- EVAL" exp))))
 
