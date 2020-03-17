@@ -29,17 +29,28 @@
 ; evaluator really *USE* list to build lists or not; well one way to findout I
 ; suppose
 
+; 2020-03-16 21:36 :: zenAndroid :: ^ THIS IS WRONG
+
+(define (quote-exp exp)
+  (list 'quote exp))
+
+(define (cons-constructor items)
+  (if (null? items)
+    (quote-exp '())
+    (list 'cons (quote-exp (car items)) (cons-constructor (cdr items)))))
+
+; 2020-03-16 22:04 :: zenAndroid :: Im a failure, a waste of goddamn oxygen
 
 
 (define (quotation-handler quotation-text)
   (if (pair? quotation-text)
-    (cons-construcotr quotation-text)
+    (zeval (cons-constructor quotation-text) the-global-environment)
     quotation-text))
 
 (define (zeval exp env)
   (cond ((self-evaluating? exp) exp)
         ((variable? exp) (lookup-variable-value exp env))
-        ((quoted? exp) (quotation-handler exp))
+        ((quoted? exp) (quotation-handler (text-of-quotation exp)))
         ((assignment? exp) (eval-assignment exp env))
         ((definition? exp) (eval-definition exp env))
         ((if? exp) (eval-if exp env))
