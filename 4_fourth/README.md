@@ -42,3 +42,4 @@ Thank you for coming to my TED talk.  ```
   to review this.
 - Lazy evaluation and side effects don't mix well.
 - Exercise 4.31: Skipping for now, but YOU NEED TO COME BACK AND TRY THIS.
+- Exercise 4.34: WILL SKIP THIS, MIGHT DO IT LATER, MIGHT NOT.
