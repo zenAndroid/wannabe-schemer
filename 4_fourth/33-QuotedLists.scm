@@ -30,12 +30,6 @@
 ; suppose
 
 
-(zeval '(define (list . z)
-          (cons (car z) (list (cdr z)))) the-global-environment)
-
-; Oh god I hope it works ...
-; Didnt want to complicate my life further by using folds or something
-; Also does not help that I do not have fold implemented in the first place
 
 (define (quotation-handler quotation-text)
   (if (pair? quotation-text)
