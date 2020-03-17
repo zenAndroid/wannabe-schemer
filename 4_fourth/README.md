@@ -36,7 +36,8 @@ that takes care of this is the `eval (operator exp) emv`, *it evaluates the let
 expression*, thereby producing the code that is to be evaluated. And produces
 the expected result.
 
-Thank you for coming to my TED talk.  ```
+Thank you for coming to my TED talk.  
+```
 
 - The lazy evaluation exercises were a bit weird and confusing, maybe you need
   to review this.
