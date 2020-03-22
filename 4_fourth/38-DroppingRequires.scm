@@ -42,10 +42,6 @@
     (require (not (= fletcher 5)))
     (require (not (= fletcher 1)))
     (require (> miller cooper))
-    (require
-     (not (= (abs (- smith fletcher)) 1)))
-    (require 
-     (not (= (abs (- fletcher cooper)) 1)))
     (list (list 'baker baker)
           (list 'cooper cooper)
           (list 'fletcher fletcher)
@@ -53,3 +49,6 @@
           (list 'smith smith))))
 
 (multiple-dwelling)
+
+
+; Yeah it has a bunch other solutions ...
