@@ -23,16 +23,16 @@
 ; ; ; ; ; ;         (cproc (analyze (if-consequent exp)))
 ; ; ; ; ; ;         (aproc (analyze (if-alternative exp))))
 ; ; ; ; ; ;     (lambda (env)
-; ; ; ; ; ;       (if (true? (pprocenv))
-; ; ; ; ; ;         (cprocenv)
-; ; ; ; ; ;         (aprocenv)))))
+; ; ; ; ; ;       (if (true? (pproc env))
+; ; ; ; ; ;         (cproc env)
+; ; ; ; ; ;         (aproc env)))))
 ; 
 ; The returned value is a procedure derived from evaluating
 ; 
 ; (lambda (env)
-;   (if (true? (pprocenv))
-;     (cprocenv)
-;     (aprocenv)))))
+;   (if (true? (pproc env))
+;     (cproc env)
+;     (aproc env)))))
 ; 
 ; in an environment where pproc, cproc and aproc are defined.
 
