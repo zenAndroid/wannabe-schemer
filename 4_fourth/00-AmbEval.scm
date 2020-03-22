@@ -8,8 +8,6 @@
 (define (zeval exp env)
   ((analyze exp) env))
 
-(define (amb? exp) (tagged-list? exp 'amb))
-(define (amb-choices exp) (cdr exp))
 
 ;; analyze from 4.1.6, with clause from 4.3.3 added
 ;; and also support for Let
@@ -338,42 +336,10 @@
                      (expand-clauses rest))))))
 
 ; 1}}} ;
-(define (apply procedure arguments);{{{
-  (cond ((primitive-procedure? procedure)
-         (apply-primitive-procedure procedure arguments))
-        ((compound-procedure? procedure)
-         (eval-sequence
-           (procedure-body procedure)
-           (extend-environment
-             (procedure-parameters procedure)
-             arguments
-             (procedure-environment procedure))))
-        (else
-         (error
-          "Unknown procedure type -- APPLY" procedure))));}}}
-(define (list-of-values exps env);{{{
-  (if (no-operands? exps)
-      '()
-      (cons (zeval (first-operand exps) env)
-            (list-of-values (rest-operands exps) env))));}}}
-(define (eval-if exp env);{{{
-  (if (true? (zeval (if-predicate exp) env))
-      (zeval (if-consequent exp) env)
-      (zeval (if-alternative exp) env)));}}}
-(define (eval-sequence exps env);{{{
-  (cond ((last-exp? exps) (zeval (first-exp exps) env))
-        (else (zeval (first-exp exps) env)
-              (eval-sequence (rest-exps exps) env))));}}}
-(define (eval-assignment exp env);{{{
-  (set-variable-value! (assignment-variable exp)
-                       (zeval (assignment-value exp) env)
-                       env)
-  'ok);}}}
-(define (eval-definition exp env);{{{
-  (define-variable! (definition-variable exp)
-                    (zeval (definition-value exp) env)
-                    env)
-  'ok);}}}
+; AMB expression handler {{{1 ;
+(define (amb? exp) (tagged-list? exp 'amb))
+(define (amb-choices exp) (cdr exp))
+; 1}}} ;
 
 ; Evaluator data structures {{{1 ;
 
@@ -460,7 +426,7 @@
           (frame-values frame))))
 ; 1}}} ;
 
-; Section 4.1.4 {{{1 ;
+; Section 4.1.4 Environment Setup, primitive procedures, etc ... {{{1 ;
 
 (define (setup-environment)
   (let ((initial-env
@@ -549,7 +515,7 @@
 (define input-prompt ";;; Amb-Eval input:")
 (define output-prompt ";;; Amb-Eval value:")
 
-(define (driver-loop)
+(define (driver-loop);{{{
   (define (internal-loop try-again)
     (prompt-for-input input-prompt)
     (let ((input (read)))
@@ -575,4 +541,4 @@
    (lambda ()
      (newline)
      (display ";;; There is no current problem")
-     (driver-loop))))
+     (driver-loop))));}}}
