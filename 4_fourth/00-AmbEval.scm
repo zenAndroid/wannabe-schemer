@@ -5,12 +5,9 @@
 
 (define apply-in-underlying-scheme apply)
 
-(define (zeval exp env)
-  ((analyze exp) env))
-
-
 ;; analyze from 4.1.6, with clause from 4.3.3 added
 ;; and also support for Let
+
 (define (analyze exp);{{{
   (cond ((self-evaluating? exp) 
          (analyze-self-evaluating exp))
@@ -437,8 +434,6 @@
     (define-variable! 'false #f initial-env)
     initial-env))
 
-;[do later] (define the-global-environment (setup-environment))
-
 (define (primitive-procedure? proc)
   (tagged-list? proc 'primitive))
 
@@ -474,27 +469,12 @@
   (map (lambda (proc) (list 'primitive (cadr proc)))
        primitive-procedures))
 
-;[moved to start of file] (define apply-in-underlying-scheme apply)
-
 (define (apply-primitive-procedure proc args)
   (apply-in-underlying-scheme
    (primitive-implementation proc) args))
 
-(define input-prompt ";;; M-Eval input:")
-(define output-prompt ";;; M-Eval value:")
-
-(define (driver-loop)
-  (prompt-for-input input-prompt)
-  (let ((input (read)))
-    (define durationtime (current-time))
-    (let ((output (zeval input the-global-environment)))
-      (newline) (display (list "Time taken: " (- (current-time) durationtime))) (newline)
-      (announce-output output-prompt)
-      (user-print output)))
-  (driver-loop))
-
 (define (prompt-for-input string)
-  (newline) (newline) (display string) (newline))
+  (newline) (display string) (newline))
 
 (define (announce-output string)
   (newline) (display string) (newline))
