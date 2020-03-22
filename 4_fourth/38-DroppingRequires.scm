@@ -36,9 +36,7 @@
         (fletcher (amb 1 2 3 4 5))
         (miller (amb 1 2 3 4 5))
         (smith (amb 1 2 3 4 5)))
-    (require
-     (distinct? (list baker cooper fletcher 
-                      miller smith)))
+    (require (distinct? (list baker cooper fletcher miller smith)))
     (require (not (= baker 5)))
     (require (not (= cooper 1)))
     (require (not (= fletcher 5)))
