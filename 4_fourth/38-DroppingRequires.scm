@@ -1,5 +1,9 @@
 ; 2020-03-22 15:33 :: zenAndroid :: 38 exercises later (pun intended)
 
+; Exercise 4.38: Modify the multiple-dwelling procedure to omit the requirement
+; that Smith and Fletcher do not live on adjacent floors. How many solutions
+; are there to this modified puzzle?
+
 (load "00-AmbEval.scm")
 
 ; One annoying thing I'm facing with the ambiguious evaluator is that I can't
@@ -42,6 +46,7 @@
     (require (not (= fletcher 5)))
     (require (not (= fletcher 1)))
     (require (> miller cooper))
+    (require (not (= (abs (- fletcher cooper)) 1)))
     (list (list 'baker baker)
           (list 'cooper cooper)
           (list 'fletcher fletcher)
@@ -49,6 +54,8 @@
           (list 'smith smith))))
 
 (multiple-dwelling)
+
+try-again
 
 
 ; Yeah it has a bunch other solutions ...

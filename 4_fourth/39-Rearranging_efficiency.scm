@@ -86,3 +86,47 @@
 ;;;  
 ;;;  I think I'll do it tomorrow. Maybe my subconscious will figure out
 ;;;  something interesting ¯\_(ツ)_/¯
+
+
+; 2020-03-22 16:49 :: zenAndroid :: Hey, so, it turns I had the correct
+; intuition, but a far better way to put would be that in this example, if you
+; put the distinctness requirement down then it will get called less often
+; since a lot of the attempts will be gleaned off by other,
+; less-computationnaly intensive requirements (See Eli's explanation which
+; helped me Formulate this)
+
+(load "00-AmbEval.scm")
+
+(driver-loop)
+
+(define (require p)
+  (if (not p)
+    (amb)))
+(define (distinct? items)
+  (cond ((null? items) true)
+        ((null? (cdr items)) true)
+        ((member (car items) (cdr items)) false)
+        (else (distinct? (cdr items)))))
+
+(define (multiple-dwelling)
+  (let ((baker (amb 1 2 3 4))
+        (cooper (amb 2 3 4 5))
+        (fletcher (amb 2 3 4))
+        (miller (amb 1 2 3 4 5))
+        (smith (amb 1 2 3 4 5)))
+    (require (> miller cooper))
+    (require (not (= (abs (- fletcher cooper)) 1)))
+    (require (not (= (abs (- smith fletcher)) 1)))
+    (require (distinct? (list baker cooper fletcher miller smith)))
+    (list (list 'baker baker)
+          (list 'cooper cooper)
+          (list 'fletcher fletcher)
+          (list 'miller miller)
+          (list 'smith smith))))
+
+(multiple-dwelling)
+
+try-again
+
+
+; Yeah it has a bunch other solutions ...
