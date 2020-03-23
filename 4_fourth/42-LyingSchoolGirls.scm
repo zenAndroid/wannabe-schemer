@@ -19,6 +19,7 @@
         (joan (amb 1 2 3 4 5))
         (kitty (amb 1 2 3 4 5))
         (mary (amb 1 2 3 4 5)))
+    (require (distinct? (list betty ethel joan kitty mary)))
     (amb (require (= betty 3)) (require (= kitty 2)))
     (amb (require (= ethel 1)) (require (= joan 2)))
     (amb (require (= joan 3)) (require (= ethel 5)))
@@ -31,3 +32,15 @@
           (list 'mary mary))))
 
 (lying-schoolgirls)
+
+;;  ;;; Starting a new problem 
+;;  ;;; Amb-Eval value:
+;;  ok
+;;  ;;; Amb-Eval input:
+;;  (lying-schoolgirls)
+;;  
+;;  ;;; Starting a new problem 
+;;  ;;; Amb-Eval value:
+;;  ((betty 3) (ethel 5) (joan 2) (kitty 1) (mary 4))
+;;  ;;; Amb-Eval input:
+;;  
