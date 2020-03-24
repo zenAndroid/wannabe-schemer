@@ -1,6 +1,5 @@
 ; 2020-03-23 21:41 :: zenAndroid :: Eeeeehh ...
 
-
 (load "00-AmbEval.scm")
 
 (driver-loop)
@@ -12,12 +11,6 @@
 (define (integer-between low high)
   (require (<= low high))
   (amb low (integer-between (+ low 1) high)))
-
-(define (distinct? items)
-  (cond ((null? items) true)
-        ((null? (cdr items)) true)
-        ((member (car items) (cdr items)) false)
-        (else (distinct? (cdr items)))))
 
 (define (eight-queens)
   (let ((first-queen (list (integer-between 1 8) (integer-between 1 8)))
@@ -44,9 +37,15 @@
 ; Funny realization, this is stratified design lol
 
 (define (nice-queens? items)
+  (define (safe-q q roq)
+    (cond ((null? items) true)
+          ((null? (cdr items)) true)
+          (else (if (not (= (car q) (caar roq)))
+                  (if (not (= (cadr q) (cadar roq)))
+                    (if (not (= (+ (car q) (caar roq)) (+ (cadr q) (cadar roq))))
+                      true))
+                  false))))
   (cond ((null? items) true)
-        ((null? (cdr items)) true)
-        ((safe-queens (car items) (cdr items)) false)
-        (else (distinct? (cdr items)))))
-
-; Where safe-queens is a procedure that takes a queen (first arg) and checks that it is not able to connsume all the other queens (second arg, which is a list of the remaining queens)
+        (else (if (safe-q (car items) (cdr items))
+                (if (nice-queens? (cdr items))
+                  true)))))
