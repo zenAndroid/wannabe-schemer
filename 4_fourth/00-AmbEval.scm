@@ -442,6 +442,11 @@
 (define primitive-procedures
   (list (list 'car car)
         (list 'cdr cdr)
+        (list 'cadr cadr)
+        (list 'caar caar)
+        (list 'cdar cdar)
+        (list 'cdadr cdadr)
+        (list 'cadar cadar)
         (list 'cons cons)
         (list 'null? null?)
         (list 'list list)

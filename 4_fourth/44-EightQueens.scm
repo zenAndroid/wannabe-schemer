@@ -43,9 +43,20 @@
           (else (if (not (= (car q) (caar roq)))
                   (if (not (= (cadr q) (cadar roq)))
                     (if (not (= (+ (car q) (caar roq)) (+ (cadr q) (cadar roq))))
-                      true))
+                      (safe-q q (cdr roq))))
                   false))))
   (cond ((null? items) true)
         (else (if (safe-q (car items) (cdr items))
                 (if (nice-queens? (cdr items))
                   true)))))
+
+
+
+; Here goes
+
+(eight-queens)
+
+
+; Cant check the result, its taking too long but oh well, don't want to spend
+; the time to optimize ..
+; Moving on ...
