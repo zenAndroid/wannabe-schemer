@@ -38,8 +38,8 @@
 
 (define (nice-queens? items)
   (define (safe-q q roq)
-    (cond ((null? items) true)
-          ((null? (cdr items)) true)
+    (cond ((null? roq) true)
+          ((null? (cdr roq)) true)
           (else (if (not (= (car q) (caar roq)))
                   (if (not (= (cadr q) (cadar roq)))
                     (if (not (= (+ (car q) (caar roq)) (+ (cadr q) (cadar roq))))
