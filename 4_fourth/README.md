@@ -45,7 +45,7 @@ Thank you for coming to my TED talk.
 - Exercise 4.31: Skipping for now, but YOU NEED TO COME BACK AND TRY THIS.
 - Exercise 4.34: WILL SKIP THIS, MIGHT DO IT LATER, MIGHT NOT.
 - Exercise 4.36: This isn't hard, but I still want you to revisit this.
-- Exercise 4.41: Will be skipping this, and will return after having actually implemented the amb evaluator.
-- Exercise 4.42: Will be skipping this, and will return after having actually implemented the amb evaluator.
-- Exercise 4.43: Will be skipping this, and will return after having actually implemented the amb evaluator.
+- Exercise 4.41: DONE
+- Exercise 4.42: DONE
+- Exercise 4.43: NOT DONE, COME BACK AND REDO THIS, It not hard, just go like this (girl name -> father), and see if you can come up with something
 - Exercise 4.44: Will be skipping this, and will return after having actually implemented the amb evaluator.
