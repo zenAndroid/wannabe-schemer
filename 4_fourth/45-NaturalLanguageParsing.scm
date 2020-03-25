@@ -18,18 +18,6 @@
 (define articles '(article the a))
 
 
-i(define (parse-sentence)
-  (list 'sentence
-         (parse-noun-phrase)
-         (parse-word verbs)))
-
-; A noun phrase, similarly, is parsed by finding an article followed by a noun:
-
-(define (parse-noun-phrase)
-  (list 'noun-phrase
-        (parse-word articles)
-        (parse-word nouns)))
-
 ; At the lowest level, parsing boils down to repeatedly checking that the next
 ; unparsed word is a member of the list of words for the required part of
 ; speech. To implement this, we maintain a global variable *unparsed*, which is
@@ -107,3 +95,26 @@ i(define (parse-sentence)
             noun-phrase
             (parse-prepositional-phrase)))))
   (maybe-extend (parse-simple-noun-phrase)))
+
+;; ;; ;; ;;; Amb-Eval input:
+;; ;; ;; (parse '(the student with the cat sleeps in the class))
+;; ;; ;; 
+;; ;; ;; ;;; Starting a new problem 
+;; ;; ;; ;;; Amb-Eval value:
+;; ;; ;; (sentence 
+;; ;; ;;   (noun-phrase 
+;; ;; ;;     (simple-noun-phrase 
+;; ;; ;;       (article the) (noun student)) 
+;; ;; ;;     (prep-phrase 
+;; ;; ;;       (prep with) 
+;; ;; ;;       (simple-noun-phrase 
+;; ;; ;;         (article the) (noun cat)))) 
+;; ;; ;;   (verb-phrase 
+;; ;; ;;     (verb sleeps) 
+;; ;; ;;     (prep-phrase 
+;; ;; ;;       (prep in) 
+;; ;; ;;       (simple-noun-phrase 
+;; ;; ;;         (article the) (noun class)))))
+
+
+;; Yey !
