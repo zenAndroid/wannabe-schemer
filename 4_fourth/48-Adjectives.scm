@@ -1,21 +1,20 @@
-; 2020-03-25 19:53 :: zenAndroid
-
+; 2021-03-25 19:53 :: zenAndroid
 
 (load "00-AmbEval.scm")
 
 (driver-loop)
 
-(define (require p)
-  (if (not p)
-    (amb)))
+(define (require p) (if (not p) (amb)))
 
-(define nouns 
-  '(noun student professor cat class))
+(define nouns '(noun student professor cat class sicp zenAndroid))
 
-(define verbs 
-  '(verb studies lectures eats sleeps))
+(define verbs '(verb studies lectures eats sleeps))
 
 (define articles '(article the a))
+
+(define prepositions '(preposition for to in by with))
+
+(define adjectives '(adjective evil heroic hungry blue amazing astonishing))
 
 
 ; At the lowest level, parsing boils down to repeatedly checking that the next
@@ -45,8 +44,6 @@
     (require (null? *unparsed*))
     sent))
 
-(define prepositions
-  '(prep for to in by with))
 
 ; and define a prepositional phrase (e.g., “for the cat”) to be a preposition
 ; followed by a noun phrase:
@@ -82,9 +79,13 @@
 ; phrase:
 
 (define (parse-simple-noun-phrase)
-  (list 'simple-noun-phrase
-        (parse-word articles)
-        (parse-word nouns)))
+  (amb (list 'simple-noun-phrase
+             (parse-word articles)
+             (parse-word nouns))
+       (list 'simple-noun-phrase
+             (parse-word articles)
+             (parse-word adjectives)
+             (parse-word nouns))))
 
 (define (parse-noun-phrase)
   (define (maybe-extend noun-phrase)
@@ -95,6 +96,8 @@
             noun-phrase
             (parse-prepositional-phrase)))))
   (maybe-extend (parse-simple-noun-phrase)))
+
+(parse '(the student with the cat sleeps in the class))
 
 ;; ;; ;; ;;; Amb-Eval input:
 ;; ;; ;; (parse '(the student with the cat sleeps in the class))
@@ -119,152 +122,31 @@
 
 ;; Yey !
 
-
-; Exercise 4.45: With the grammar given above, the following sentence can be
-; parsed in five different ways: “The professor lectures to the student in the ; class with the cat.” Give the five parses and explain the differences in
-; shades of meaning among them.
-
-(parse '(the professor lectures to the student in the class with the cat))
-
-;;; Amb-Eval input:
-(parse '(the professor lectures to the student in the class with the cat))
+(parse '(the zenAndroid studies))
 
 ;;; Starting a new problem 
 ;;; Amb-Eval value:
-(sentence 
-  (simple-noun-phrase 
-    (article the) 
-    (noun professor)) 
-  (verb-phrase 
-    (verb-phrase 
-      (verb-phrase 
-        (verb lectures) 
-        (prep-phrase 
-          (prep to) 
-          (simple-noun-phrase 
-            (article the) 
-            (noun student)))) 
-      (prep-phrase 
-        (prep in) 
-        (simple-noun-phrase 
-          (article the) 
-          (noun class)))) 
-    (prep-phrase 
-      (prep with) 
-      (simple-noun-phrase 
-        (article the) 
-        (noun cat)))))
+(sentence (simple-noun-phrase 
+            (article the) (noun zenAndroid))
+          (verb studies))
 ;;; Amb-Eval input:
-try-again
+(parse '(the evil zenAndroid studies))
 
-;;; Amb-Eval value:
-(sentence 
-  (simple-noun-phrase 
-    (article the) 
-    (noun professor)) 
-  (verb-phrase 
-    (verb-phrase 
-      (verb lectures) 
-      (prep-phrase 
-        (prep to) 
-        (simple-noun-phrase 
-          (article the) 
-          (noun student)))) 
-    (prep-phrase 
-      (prep in) 
-      (noun-phrase 
-        (simple-noun-phrase 
-          (article the) 
-          (noun class)) 
-        (prep-phrase 
-          (prep with) 
-          (simple-noun-phrase 
-            (article the) 
-            (noun cat)))))))
-;;; Amb-Eval input:
-try-again
-
-;;; Amb-Eval value:
-(sentence 
-  (simple-noun-phrase 
-            (article the) 
-            (noun professor)) 
-          (verb-phrase 
-            (verb-phrase 
-              (verb lectures) 
-              (prep-phrase 
-                (prep to) 
-                (noun-phrase 
-                  (simple-noun-phrase 
-                    (article the) 
-                    (noun student)) 
-                  (prep-phrase 
-                    (prep in) 
-                    (simple-noun-phrase 
-                      (article the) 
-                      (noun class)))))) 
-            (prep-phrase 
-              (prep with) 
-              (simple-noun-phrase 
-                (article the) 
-                (noun cat)))))
-;;; Amb-Eval input:
-try-again
-
+;;; Starting a new problem 
 ;;; Amb-Eval value:
 (sentence (simple-noun-phrase 
-            (article the) 
-            (noun professor)) 
-          (verb-phrase 
-            (verb lectures) 
-            (prep-phrase 
-              (prep to) 
-              (noun-phrase 
-                (noun-phrase 
-                  (simple-noun-phrase 
-                    (article the) 
-                    (noun student)) 
-                  (prep-phrase 
-                    (prep in) 
-                    (simple-noun-phrase 
-                      (article the) 
-                      (noun class)))) 
-                (prep-phrase 
-                  (prep with) 
-                  (simple-noun-phrase 
-                    (article the) 
-                    (noun cat)))))))
+            (article the) (adjective evil) (noun zenAndroid)) 
+          (verb studies))
 ;;; Amb-Eval input:
-try-again
+(parse '(for the amazing zenAndroid))
 
-;;; Amb-Eval value:
-(sentence 
-  (simple-noun-phrase 
-    (article the) 
-    (noun professor)) 
-  (verb-phrase 
-    (verb lectures) 
-    (prep-phrase 
-      (prep to) 
-      (noun-phrase 
-        (simple-noun-phrase 
-          (article the) 
-          (noun student)) 
-        (prep-phrase 
-          (prep in) 
-          (noun-phrase 
-            (simple-noun-phrase 
-              (article the) 
-              (noun class)) 
-            (prep-phrase 
-              (prep with) 
-              (simple-noun-phrase 
-                (article the) 
-                (noun cat)))))))))
-;;; Amb-Eval input:
-try-again
-
+;;; Starting a new problem 
 ;;; There are no more values of
-(parse (quote (the professor lectures to the student in the class with the cat)))
+(parse (quote (for the amazing zenAndroid)))
 ;;; Amb-Eval input:
+
+; 2020-03-25 21:04 :: zenAndroid :: This last example surprised me at first,
+; but then I realized prepositional phrase can never be the beginning as
+; specified, so its not a bug as such.
+
 
