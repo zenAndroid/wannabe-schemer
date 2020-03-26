@@ -465,6 +465,8 @@
         (list 'integer? integer?)
         (list 'sqrt sqrt)
         (list 'eq? eq?)
+        (list 'random random)
+        (list 'length length)
 ;;      more primitives
         ))
 
