@@ -55,26 +55,23 @@
 
 (define (inst-scan insts)
   (define reg-source (make-hash-table))
-  (define (insts->entry insts);{{{
-    (let* ((raw-insts (filter (lambda (arg) (not (symbol? arg))) insts))
-           (goto-insts (filter
+  (define (insts->entry raw-insts);{{{
+    (let* ((goto-insts (filter
                          (lambda(arg-inst)
                            (and (eq? (car arg-inst) 'goto)
                                 (eq? (caadr arg-inst) 'reg)))
                          raw-insts)))
       (delete-duplicates (map cadadr goto-insts))));}}}
-  (define (insts->stack-regs insts);{{{
-    (let* ((raw-insts (filter (lambda (arg) (not (symbol? arg))) insts))
-           (stack-insts (filter
+  (define (insts->stack-regs raw-insts);{{{
+    (let* ((stack-insts (filter
                           (lambda (arg-inst)
                             (or (eq? (car arg-inst) 'save)
                                 (eq? (car arg-inst) 'restore)))
                           raw-insts)))
       (delete-duplicates (map cadr stack-insts))));}}}
-  (define (insts->reg-sources! insts);{{{
+  (define (insts->reg-sources! raw-insts);{{{
     (hash-clear! reg-source)
-    (let* ((raw-insts (filter (lambda (arg) (not (symbol? arg))) insts))
-           (assign-insts (delete-duplicates (filter 
+    (let* ((assign-insts (delete-duplicates (filter 
                                               (lambda (arg-inst)
                                                 (eq? (car arg-inst) 'assign))
                                               raw-insts))))
@@ -88,16 +85,16 @@
                                                         (hashq-ref reg-source
                                                                    reg))))))
                 assign-insts)));}}}
-  (define (insts->sorted insts);{{{
+  (define (insts->sorted raw-insts);{{{
+    (delete-duplicates (sort raw-insts (lambda(inst inst2) (string< 
+                                                             (symbol->string (car inst))
+                                                             (symbol->string (car inst2)))))));}}}
     (let* ((raw-insts (filter (lambda (arg) (not (symbol? arg))) insts)))
-      (delete-duplicates (sort raw-insts (lambda(inst inst2) (string< 
-                                                               (symbol->string (car inst))
-                                                               (symbol->string (car inst2))))))));}}}
-  (insts->reg-sources! insts)
-  (pretty-print (list "Sorted Instructions: " (insts->sorted insts)
-                      "Entry point registers: " (insts->entry insts)
-                      "Stack-interacting registers: " (insts->stack-regs insts)
-                      "Register sources: " (hash-fold
-                                             (lambda(k v p)
-                                               (cons (list k v) p))
-                                             '() reg-source))))
+      (insts->reg-sources! raw-insts)
+      (pretty-print (list "Sorted Instructions: " (insts->sorted raw-insts)
+                          "Entry point registers: " (insts->entry raw-insts)
+                          "Stack-interacting registers: " (insts->stack-regs raw-insts)
+                          "Register sources: " (hash-fold
+                                                 (lambda(k v p)
+                                                   (cons (list k v) p))
+                                                 '() reg-source)))))
