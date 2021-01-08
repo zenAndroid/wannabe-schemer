@@ -48,13 +48,9 @@
                                                    (symbol->string (car inst2)))))));}}}
     (let* ((raw-insts (filter (lambda (arg) (not (symbol? arg))) insts)))
       (insts->reg-sources! raw-insts)
-      (pretty-print (list "Sorted Instructions: " (insts->sorted raw-insts)
-                          "Entry point registers: " (insts->entry raw-insts)
-                          "Stack-interacting registers: " (insts->stack-regs raw-insts)
-                          "Register sources: " (hash-fold
-                                                 (lambda(k v p)
-                                                   (cons (list k v) p))
-                                                 '() reg-source)))));}}}
+      (list (insts->sorted raw-insts)
+            (insts->entry raw-insts)
+            (insts->stack-regs raw-insts))));}}}
 
 (define (make-machine register-names ops controller-text);{{{
   (let ((machine (make-new-machine)))
@@ -65,7 +61,7 @@
     ((machine 'install-instruction-sequence)
      (assemble controller-text machine))
     ((machine 'install-instruction-scan-results)
-     (inst-scan controller-text machine))
+     (inst-scan controller-text (machine 'reg-source)))
     machine));}}}
 
 (define (make-new-machine);{{{
@@ -116,6 +112,10 @@
           ((install-operations) 
            (lambda (ops) (set! the-ops (append the-ops ops))))
           ((stack) stack)
+          ((install-instruction-scan-results) 
+           (lambda(arg-list) (set! sorted-instructions (car arg-list))
+                             (set! entry-regs (cadr arg-list))
+                             (set! stack-regs (caddr arg-list))))
           ((operations) the-ops)
           ((reg-source) reg-sources)
           ((install-entries) (lambda (arg) (set! entry-regs arg)))
