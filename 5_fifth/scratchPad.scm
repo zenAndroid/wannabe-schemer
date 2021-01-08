@@ -53,8 +53,7 @@
       (goto (reg continue)) 
       fib-done));}}}
 
-(define (inst-scan insts)
-  (define reg-source (make-hash-table))
+(define (inst-scan insts reg-source)
   (define (insts->entry raw-insts);{{{
     (let* ((goto-insts (filter
                          (lambda(arg-inst)

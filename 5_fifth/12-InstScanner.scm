@@ -10,6 +10,52 @@
 ;; 7 - A machine is ALSO going to have a new dispatch message that it will respond to print out
 ;;     the scan results.
 
+(define (inst-scan insts reg-source);{{{
+  (define (insts->entry raw-insts);{{{
+    (let* ((goto-insts (filter
+                         (lambda(arg-inst)
+                           (and (eq? (car arg-inst) 'goto)
+                                (eq? (caadr arg-inst) 'reg)))
+                         raw-insts)))
+      (delete-duplicates (map cadadr goto-insts))));}}}
+  (define (insts->stack-regs raw-insts);{{{
+    (let* ((stack-insts (filter
+                          (lambda (arg-inst)
+                            (or (eq? (car arg-inst) 'save)
+                                (eq? (car arg-inst) 'restore)))
+                          raw-insts)))
+      (delete-duplicates (map cadr stack-insts))));}}}
+  (define (insts->reg-sources! raw-insts);{{{
+    (hash-clear! reg-source)
+    (let* ((assign-insts (delete-duplicates (filter 
+                                              (lambda (arg-inst)
+                                                (eq? (car arg-inst) 'assign))
+                                              raw-insts))))
+      (for-each (lambda(arg-inst) (let ((reg (cadr arg-inst))
+                                        (source (cddr arg-inst)))
+                                    (if (not (hashq-ref reg-source reg))
+                                      (hashq-set! reg-source reg (list source))
+                                      (hashq-set! reg-source
+                                                  reg
+                                                  (cons source
+                                                        (hashq-ref reg-source
+                                                                   reg))))))
+                assign-insts)));}}}
+  (define (insts->sorted raw-insts);{{{
+    (delete-duplicates (sort raw-insts 
+                             (lambda(inst inst2) (string< 
+                                                   (symbol->string (car inst))
+                                                   (symbol->string (car inst2)))))));}}}
+    (let* ((raw-insts (filter (lambda (arg) (not (symbol? arg))) insts)))
+      (insts->reg-sources! raw-insts)
+      (pretty-print (list "Sorted Instructions: " (insts->sorted raw-insts)
+                          "Entry point registers: " (insts->entry raw-insts)
+                          "Stack-interacting registers: " (insts->stack-regs raw-insts)
+                          "Register sources: " (hash-fold
+                                                 (lambda(k v p)
+                                                   (cons (list k v) p))
+                                                 '() reg-source)))));}}}
+
 (define (make-machine register-names ops controller-text)
   (let ((machine (make-new-machine)))
     (for-each (lambda (register-name)
@@ -18,8 +64,9 @@
     ((machine 'install-operations) ops)    
     ((machine 'install-instruction-sequence)
      (assemble controller-text machine))
+    ((machine 'install-instruction-scan-results)
+     (inst-scan controller-text machine))
     machine))
-
 
 (define (make-new-machine)
   (let ((pc (make-register 'pc))
@@ -59,16 +106,17 @@
                 ((instruction-execution-proc (car insts)))
                 (execute)))))
       (define (dispatch message)
-        (cond ((eq? message 'start)
-               (set-contents! pc the-instruction-sequence)
-               (execute))
-              ((eq? message 'install-instruction-sequence)
-               (lambda (seq) (set! the-instruction-sequence seq)))
-              ((eq? message 'allocate-register) allocate-register)
-              ((eq? message 'get-register) lookup-register)
-              ((eq? message 'install-operations)
-               (lambda (ops) (set! the-ops (append the-ops ops))))
-              ((eq? message 'stack) stack)
-              ((eq? message 'operations) the-ops)
-              (else (error "Unknown request -- MACHINE" message))))
+        (case message
+          ((start) ((set-contents! pc the-instruction-sequence)
+                    (execute)))
+          ((install-instruction-sequence)
+           (lambda (seq) (set! the-instruction-sequence seq)))
+          ((allocate-register) allocate-register)
+          ((get-register) lookup-register)
+          ((installi-operations) 
+           (lambda (ops) (set! the-ops (append the-ops ops))))
+          ((stack) stack)
+          ((operations) the-ops)
+          (else (error "Unknown request -- MACHINE" message))))
       dispatch)))
+
