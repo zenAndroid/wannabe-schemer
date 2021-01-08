@@ -52,7 +52,6 @@
       (assign val (reg n))               ; base case: Fib(n)=n 
       (goto (reg continue)) 
       fib-done));}}}
-
 (define (inst-scan insts reg-source)
   (define (insts->entry raw-insts);{{{
     (let* ((goto-insts (filter
@@ -96,4 +95,7 @@
                           "Register sources: " (hash-fold
                                                  (lambda(k v p)
                                                    (cons (list k v) p))
-                                                 '() reg-source)))))
+                                                 '() reg-source)))
+      (list (insts->sorted raw-insts)
+            (insts->entry raw-insts)
+            (insts->stack-regs raw-insts))))

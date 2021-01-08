@@ -56,7 +56,7 @@
                                                    (cons (list k v) p))
                                                  '() reg-source)))));}}}
 
-(define (make-machine register-names ops controller-text)
+(define (make-machine register-names ops controller-text);{{{
   (let ((machine (make-new-machine)))
     (for-each (lambda (register-name)
                 ((machine 'allocate-register) register-name))
@@ -66,9 +66,9 @@
      (assemble controller-text machine))
     ((machine 'install-instruction-scan-results)
      (inst-scan controller-text machine))
-    machine))
+    machine));}}}
 
-(define (make-new-machine)
+(define (make-new-machine);{{{
   (let ((pc (make-register 'pc))
         (flag (make-register 'flag))
         (stack (make-stack))
@@ -93,19 +93,19 @@
                   (cons (list name (make-register name))
                         register-table)))
         'register-allocated)
-      (define (lookup-register name)
+      (define (lookup-register name);{{{
         (let ((val (assoc name register-table)))
           (if val
               (cadr val)
-              (error "Unknown register:" name))))
-      (define (execute)
+              (error "Unknown register:" name))));}}}
+      (define (execute);{{{
         (let ((insts (get-contents pc)))
           (if (null? insts)
               'done
               (begin
                 ((instruction-execution-proc (car insts)))
-                (execute)))))
-      (define (dispatch message)
+                (execute)))));}}}
+      (define (dispatch message);{{{
         (case message
           ((start) ((set-contents! pc the-instruction-sequence)
                     (execute)))
@@ -113,10 +113,14 @@
            (lambda (seq) (set! the-instruction-sequence seq)))
           ((allocate-register) allocate-register)
           ((get-register) lookup-register)
-          ((installi-operations) 
+          ((install-operations) 
            (lambda (ops) (set! the-ops (append the-ops ops))))
           ((stack) stack)
           ((operations) the-ops)
-          (else (error "Unknown request -- MACHINE" message))))
-      dispatch)))
+          ((reg-source) reg-sources)
+          ((install-entries) (lambda (arg) (set! entry-regs arg)))
+          ((install-stack-regs) (lambda (arg) (set! stack-regs arg)))
+          ((install-sorted) (lambda (arg) (set! sorted-instructions arg)))
+          (else (error "Unknown request -- MACHINE" message))));}}}
+      dispatch)));}}}
 
