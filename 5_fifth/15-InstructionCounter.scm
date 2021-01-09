@@ -42,7 +42,9 @@
       (define (execute);{{{
         (let ((insts (get-contents pc)))
           (if (null? insts)
-              'done
+              (begin (stack 'print-statistics)
+                     (stack 'initialize)
+                     'done)
               (begin
                 (set! instruction-count (+ instruction-count 1)); Counting this instruction
                 ((instruction-execution-proc (car insts)))
