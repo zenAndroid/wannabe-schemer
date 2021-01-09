@@ -83,7 +83,7 @@
           (else (error "Unknown request -- MACHINE" message))));}}}
       dispatch)));}}}
 
-(define fib-machine 
+(define fib-machine ;{{{
   (make-machine ;register-names ops controller-text 
     (list (list '< <) (list '- -) (list '+ +)) 
     '(  ; from ch5.scm 
@@ -116,4 +116,4 @@
         immediate-answer 
         (assign val (reg n))               ; base case: Fib(n)=n 
         (goto (reg continue)) 
-        fib-done)))
+        fib-done)));}}}

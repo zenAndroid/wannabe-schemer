@@ -4,7 +4,7 @@
 ;; provided by the book.
 
 
-(define (make-stack)
+(define (make-stack);{{{
   (let ((s '())
         (number-pushes 0)
         (max-depth 0)
@@ -40,9 +40,9 @@
              (print-statistics))
             (else
              (error "Unknown request -- STACK" message))))
-    dispatch))
+    dispatch));}}}
 
-(define fib-machine 
+(define fib-machine ;{{{
   (make-machine ;register-names ops controller-text 
     (list (list '< <) (list '- -) (list '+ +)) 
     '(  ; from ch5.scm 
@@ -77,10 +77,9 @@
         (goto (reg continue)) 
         fib-done
         (perform (op print-stack-statistics))
-        (perform (op initialize-stack)))))
+        (perform (op initialize-stack)))));}}}
 
-
-(define fact-machine 
+(define fact-machine ;{{{
   (make-machine 
     (list (list '- -) (list '* *) (list '+ +) (list '= =))
     '( (assign continue (label fact-done))     ; set up final return address
@@ -105,4 +104,4 @@
       (goto (reg continue))                   ; return to caller
       fact-done
       (perform (op print-stack-statistics))
-      (perform (op initialize-stack)))))
+      (perform (op initialize-stack)))));}}}
