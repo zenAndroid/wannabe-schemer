@@ -1,19 +1,12 @@
-(load "14-StackStats.scm")
-
-;; TL;DR I think I'll modify execute in make-new-machine and 
-;; add the stuff to deal with the instruction count.
-
-
-;; However i'm thinking of importing all(?) the functions to date,
-;; To reduce confusion. Dunno bout that though.
-
+(load "15-InstructionCounter.scm")
 
 (define (make-new-machine);{{{
   (let ((pc (make-register 'pc))
         (flag (make-register 'flag))
         (stack (make-stack))
         (the-instruction-sequence '())
-        (instruction-count 0)
+        (instruction-count 0) ; Instruction counter
+        (tracing-mode #f) ; Tracing mode defaulting on the OFF position.
         (entry-regs '())
         (stack-regs '())
         (sorted-instructions '())
@@ -45,6 +38,10 @@
               'done
               (begin
                 (set! instruction-count (+ instruction-count 1)); Counting this instruction
+                (if tracing-mode
+                  (begin (display (instruction-text (car insts)))
+                         (newline))) ; If the tracing is on,
+                                     ; display the instruction text
                 ((instruction-execution-proc (car insts)))
                 (execute)))));}}}
       (define (dispatch message);{{{
@@ -74,7 +71,10 @@
                                                                          (cons (list k v) p))
                                                                        '() reg-sources))))
           ((print-instruction-count) instruction-count); Access to instruction-count
-          ((reset-instruction-count) (set! instruction-count 0)); Explicitly resetting the instruction count (not needed per se)
+          ((reset-instruction-count) (set! instruction-count 0)); Explicitly resetting the instruction count
+          ; (not needed per se, but SICP asks and I try to deliver ¯\_(ツ)_/¯)
+          ((tracing-on) (set! tracing-mode #t)) ;; Tracing mode toggles
+          ((tracing-off) (set! tracing-mode #f))
           (else (error "Unknown request -- MACHINE" message))));}}}
       dispatch)));}}}
 
