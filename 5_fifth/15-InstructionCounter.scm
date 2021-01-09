@@ -28,6 +28,7 @@
         (flag (make-register 'flag))
         (stack (make-stack))
         (the-instruction-sequence '())
+        (instruction-count 0)
         (entry-regs '())
         (stack-regs '())
         (sorted-instructions '())
@@ -58,11 +59,13 @@
           (if (null? insts)
               'done
               (begin
+                (set! instruction-count (+ instruction-count 1)); Counting this instruction
                 ((instruction-execution-proc (car insts)))
                 (execute)))));}}}
       (define (dispatch message);{{{
         (case message
-          ((start) (set-contents! pc the-instruction-sequence)
+          ((start) (set! instruction-count 0); Initializing the instruction-count at the beginning of an execution.
+                   (set-contents! pc the-instruction-sequence)
                    (execute))
           ((install-instruction-sequence)
            (lambda (seq) (set! the-instruction-sequence seq)))
@@ -78,9 +81,6 @@
           ((operations) the-ops)
           ((reg-source) reg-sources)
           ((get-sorted-insts) sorted-instructions)
-          ((install-entries) (lambda (arg) (set! entry-regs arg)))
-          ((install-stack-regs) (lambda (arg) (set! stack-regs arg)))
-          ((install-sorted) (lambda (arg) (set! sorted-instructions arg)))
           ((show-inst-scan) (pretty-print (list "Sorted Instructions: " sorted-instructions
                                                 "Entry point registers: " entry-regs
                                                 "Stack-interacting registers: " stack-regs
@@ -88,10 +88,12 @@
                                                                        (lambda(k v p)
                                                                          (cons (list k v) p))
                                                                        '() reg-sources))))
+          ((print-instruction-count) instruction-count); Access to instruction-count
+          ((reset-instruction-count) (set! instruction-count 0)); Explicitly resetting the instruction count (not needed per se)
           (else (error "Unknown request -- MACHINE" message))));}}}
       dispatch)));}}}
 
-(define fib-machine 
+(define fib-machine ;{{{
   (make-machine ;register-names ops controller-text 
     (list (list '< <) (list '- -) (list '+ +)) 
     '(  ; from ch5.scm 
@@ -126,10 +128,9 @@
         (goto (reg continue)) 
         fib-done
         (perform (op print-stack-statistics))
-        (perform (op initialize-stack)))))
+        (perform (op initialize-stack)))));}}}
 
-
-(define fact-machine 
+(define fact-machine ;{{{
   (make-machine 
     (list (list '- -) (list '* *) (list '+ +) (list '= =))
     '( (assign continue (label fact-done))     ; set up final return address
@@ -154,4 +155,4 @@
       (goto (reg continue))                   ; return to caller
       fact-done
       (perform (op print-stack-statistics))
-      (perform (op initialize-stack)))))
+      (perform (op initialize-stack)))));}}}
