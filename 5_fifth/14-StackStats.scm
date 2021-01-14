@@ -1,6 +1,6 @@
 (load "13-RegisterDetermination.scm")
 
-;; And then I'll simply change make-stack, I'm not doing anuthing by the way, this was
+;; And then I'll simply change make-stack, I'm not doing anything by the way, this was
 ;; provided by the book.
 
 
@@ -41,7 +41,6 @@
             (else
              (error "Unknown request -- STACK" message))))
     dispatch));}}}
-
 
 (define (make-new-machine);{{{
   (let ((pc (make-register 'pc))
