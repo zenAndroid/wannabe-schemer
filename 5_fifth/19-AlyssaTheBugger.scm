@@ -629,7 +629,7 @@
       (goto (reg continue))                   ; return to caller
       fact-done)));}}}
 
-((get-register fact-machine 'n) 'tracing-on)
+; ((get-register fact-machine 'n) 'tracing-on)
 ((get-register fact-machine 'val) 'tracing-on)
 (set-register-contents! fact-machine 'n 18)
 (fact-machine 'tracing-on)
