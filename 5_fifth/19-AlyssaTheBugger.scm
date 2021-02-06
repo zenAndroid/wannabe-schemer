@@ -1,3 +1,8 @@
+;/usr/bin/guile-2.2 -l
+
+(use-modules (ice-9 pretty-print)) ; Pretty printing
+(use-modules (srfi srfi-1)) ; Remove duplicate
+
 ; Well, first of all.
 ; The habit of mine to keep an older solution to an exercise and then 'overriding'
 ; it in the next exercise by loading the preceeding exercise and just shadowing the previous namespace is
@@ -7,6 +12,19 @@
 ; the code and make this file a stand-alone file before writing anything.
 
 
+;;;;REGISTER-MACHINE SIMULATOR FROM SECTION 5.2 OF
+;;;; STRUCTURE AND INTERPRETATION OF COMPUTER PROGRAMS
+
+;;;;Matches code in ch5.scm
+
+;;;;This file can be loaded into Scheme as a whole.
+;;;;Then you can define and simulate machines as shown in section 5.2
+
+;;;**NB** there are two versions of make-stack below.
+;;; Choose the monitored or unmonitored one by reordering them to put the
+;;;  one you want last, or by commenting one of them out.
+;;; Also, comment in/out the print-stack-statistics op in make-new-machine
+;;; To find this stack code below, look for comments with **
 
 
 (define (make-machine register-names ops controller-text)
@@ -470,3 +488,1082 @@
 ;; $3 = 377
 
 ;; So that's cool
+
+(define (make-register name)
+  (let ((contents '*unassigned*) (reg-name name))
+    (define (dispatch message)
+      (cond ((eq? message 'get) contents)
+            ((eq? message 'name) reg-name)
+            ((eq? message 'set)
+             (lambda (value) (set! contents value)))
+            (else
+             (error "Unknown request -- REGISTER" message))))
+    dispatch))
+
+(define (make-stack)
+  (let ((s '()))
+    (define (push x)
+      (set! s (cons x s)))
+    (define (peek)
+      (if (null? s)
+          (error "Empty stack -- POP")
+          (car s)))
+    (define (pop)
+      (if (null? s)
+          (error "Empty stack -- POP")
+          (let ((top (car s)))
+            (set! s (cdr s))
+            top)))
+    (define (initialize)
+      (set! s '())
+      'done)
+    (define (dispatch message)
+      (cond ((eq? message 'push) push)
+            ((eq? message 'pop) (pop))
+            ((eq? message 'peek) (peek))
+            ((eq? message 'initialize) (initialize))
+            (else (error "Unknown request -- STACK"
+                         message))))
+    dispatch))
+
+;; zenAndroid :: when pushing the pair in the stack, helps to save the register's name.
+
+(define (get-reg-name register)
+  (register 'name))
+
+;; zenAndroid :: Should be obvious what this is for.
+
+(define (peek stack)
+  (stack 'peek))
+
+;; zenAndroid :: I feel this is going to be where the main trick/shtick is going to happen.
+
+(define (make-save inst machine stack pc)
+  (let ((reg (get-register machine
+                           (stack-inst-reg-name inst))))
+    (lambda () ;; zenAndroid :: Here goes, instead of pushing the content alone
+               ;; I will push the name as well, and cons the two together.
+               ;; So the stack thingies are composed like this: <reg-name,reg-content>
+      (push stack (cons (get-reg-name reg) (get-contents reg)))
+      (advance-pc pc))))
+
+;; So, to restore register y, I will first 
+;; 1 - peek to see if the topmost frame is reserved for register y.
+;; 2 - Assuming so, all goes without any further problems
+;; 3 - Else, I throw an error.
+
+;; Question remains, ....
+;; Assembly time, or simulation time?
+
+(define (make-restore inst machine stack pc)
+  (let ((reg (get-register machine
+                           (stack-inst-reg-name inst))))
+    (let ((reg-name (get-reg-name reg)))
+      (lambda()
+        (let ((reg-at-top-of-stack (car (peek stack))))
+          (if (eq? reg-name reg-at-top-of-stack)
+            (begin
+              (set-contents! reg (cdr (pop stack)))
+              (advance-pc pc))
+            (error "Stack top not conforming to the request -- MAKE-RESTORE" 
+                   (list reg-name reg-at-top-of-stack))))))))
+
+(define mach
+  (make-machine
+    '(x y)
+    (list (list '* *) (list '- -) (list '= =))
+    '(
+      (assign x (const 5))
+      (assign y (const 1))
+      (save x)
+      (save y)
+      (restore y)
+      )))
+
+(define (inst-scan insts reg-source);{{{
+  (define (insts->entry raw-insts);{{{
+    (let* ((goto-insts (filter
+                         (lambda(arg-inst)
+                           (and (eq? (car arg-inst) 'goto)
+                                (eq? (caadr arg-inst) 'reg)))
+                         raw-insts)))
+      (delete-duplicates (map cadadr goto-insts))));}}}
+  (define (insts->stack-regs raw-insts);{{{
+    (let* ((stack-insts (filter
+                          (lambda (arg-inst)
+                            (or (eq? (car arg-inst) 'save)
+                                (eq? (car arg-inst) 'restore)))
+                          raw-insts)))
+      (delete-duplicates (map cadr stack-insts))));}}}
+  (define (insts->reg-sources! raw-insts);{{{
+    (hash-clear! reg-source)
+    (let* ((assign-insts (delete-duplicates (filter 
+                                              (lambda (arg-inst)
+                                                (eq? (car arg-inst) 'assign))
+                                              raw-insts))))
+      (for-each (lambda(arg-inst) (let ((reg (cadr arg-inst))
+                                        (source (cddr arg-inst)))
+                                    (if (not (hashq-ref reg-source reg))
+                                      (hashq-set! reg-source reg (list source))
+                                      (hashq-set! reg-source
+                                                  reg
+                                                  (cons source
+                                                        (hashq-ref reg-source
+                                                                   reg))))))
+                assign-insts)));}}}
+  (define (insts->sorted raw-insts);{{{
+    (delete-duplicates (sort raw-insts 
+                             (lambda(inst inst2) (string< 
+                                                   (symbol->string (car inst))
+                                                   (symbol->string (car inst2)))))));}}}
+    (let* ((raw-insts (filter (lambda (arg) (not (symbol? arg))) insts)))
+      (insts->reg-sources! raw-insts)
+      (list (insts->sorted raw-insts)
+            (insts->entry raw-insts)
+            (insts->stack-regs raw-insts))));}}}
+
+(define (make-machine register-names ops controller-text);{{{
+  (let ((machine (make-new-machine)))
+    (for-each (lambda (register-name)
+                ((machine 'allocate-register) register-name))
+              register-names)
+    ((machine 'install-operations) ops)    
+    ((machine 'install-instruction-sequence)
+     (assemble controller-text machine))
+    ((machine 'install-instruction-scan-results)
+     (inst-scan controller-text (machine 'reg-source)))
+    machine));}}}
+
+(define (make-new-machine);{{{
+  (let ((pc (make-register 'pc))
+        (flag (make-register 'flag))
+        (stack (make-stack))
+        (the-instruction-sequence '())
+        (entry-regs '())
+        (stack-regs '())
+        (sorted-instructions '())
+        (reg-sources (make-hash-table)))
+    (let ((the-ops
+           (list (list 'initialize-stack
+                       (lambda () (stack 'initialize)))
+                 ;;**next for monitored stack (as in section 5.2.4)
+                 ;;  -- comment out if not wanted
+                 (list 'print-stack-statistics
+                       (lambda () (stack 'print-statistics)))))
+          (register-table
+           (list (list 'pc pc) (list 'flag flag))))
+      (define (allocate-register name)
+        (if (assoc name register-table)
+            (error "Multiply defined register: " name)
+            (set! register-table
+                  (cons (list name (make-register name))
+                        register-table)))
+        'register-allocated)
+      (define (lookup-register name);{{{
+        (let ((val (assoc name register-table)))
+          (if val
+              (cadr val)
+              (error "Unknown register:" name))));}}}
+      (define (execute);{{{
+        (let ((insts (get-contents pc)))
+          (if (null? insts)
+              'done
+              (begin
+                ((instruction-execution-proc (car insts)))
+                (execute)))));}}}
+      (define (dispatch message);{{{
+        (case message
+          ((start) ((set-contents! pc the-instruction-sequence)
+                    (execute)))
+          ((install-instruction-sequence)
+           (lambda (seq) (set! the-instruction-sequence seq)))
+          ((allocate-register) allocate-register)
+          ((get-register) lookup-register)
+          ((install-operations) 
+           (lambda (ops) (set! the-ops (append the-ops ops))))
+          ((stack) stack)
+          ((install-instruction-scan-results) 
+           (lambda(arg-list) (set! sorted-instructions (car arg-list))
+                             (set! entry-regs (cadr arg-list))
+                             (set! stack-regs (caddr arg-list))))
+          ((operations) the-ops)
+          ((reg-source) reg-sources)
+          ((install-entries) (lambda (arg) (set! entry-regs arg)))
+          ((install-stack-regs) (lambda (arg) (set! stack-regs arg)))
+          ((install-sorted) (lambda (arg) (set! sorted-instructions arg)))
+          ((show-inst-scan) (pretty-print (list "Sorted Instructions: " sorted-instructions
+                                                "Entry point registers: " entry-regs
+                                                "Stack-interacting registers: " stack-regs
+                                                "Register sources: " (hash-fold
+                                                                       (lambda(k v p)
+                                                                         (cons (list k v) p))
+                                                                       '() reg-sources))))
+          (else (error "Unknown request -- MACHINE" message))));}}}
+      dispatch)));}}}
+
+
+
+(define expt-machine
+  (make-machine
+    '(n b val continue)
+    (list (list '* *) (list '- -) (list '= =))
+    '(
+      (assign continue (label done))
+      loop
+      (test (op =) (reg n) (const 0))
+      (branch (label base-case))
+      (save continue)
+      (assign continue (label after))
+      (assign n (op -) (reg n) (const 1))
+      (goto (label loop))
+      after
+      (restore continue)
+      (assign val (op *) (reg val) (reg b))
+      (goto (reg continue))
+      base-case
+      (assign val (const 1))   
+      (goto (reg continue))
+      done)))
+
+(define fib-machine 
+  (make-machine ;register-names ops controller-text 
+    '(n val continue) 
+    (list (list '< <) (list '- -) (list '+ +)) 
+    '(  ; from ch5.scm 
+        (assign continue (label fib-done)) 
+        fib-loop 
+        (test (op <) (reg n) (const 2)) 
+        (branch (label immediate-answer)) 
+        ;; set up to compute Fib(n-1) 
+        (save continue) 
+        (assign continue (label afterfib-n-1)) 
+        (save n)                           ; save old value of n 
+        (assign n (op -) (reg n) (const 1)); clobber n to n-1 
+        (goto (label fib-loop))            ; perform recursive call 
+        afterfib-n-1                         ; upon return, val contains Fib(n-1) 
+        (restore n) 
+        (restore continue) 
+        ;; set up to compute Fib(n-2) 
+        (assign n (op -) (reg n) (const 2)) 
+        (save continue) 
+        (assign continue (label afterfib-n-2)) 
+        (save val)                         ; save Fib(n-1) 
+        (goto (label fib-loop)) 
+        afterfib-n-2                         ; upon return, val contains Fib(n-2) 
+        (assign n (reg val))               ; n now contains Fib(n-2) 
+        (restore val)                      ; val now contains Fib(n-1) 
+        (restore continue) 
+        (assign val                        ; Fib(n-1)+Fib(n-2) 
+                (op +) (reg val) (reg n))  
+        (goto (reg continue))              ; return to caller, answer is in val 
+        immediate-answer 
+        (assign val (reg n))               ; base case: Fib(n)=n 
+        (goto (reg continue)) 
+        fib-done)))
+
+(define (make-machine ops controller-text);{{{
+  (let ((machine (make-new-machine)))
+    (let ((raw-insts (filter (lambda(arg) (not (symbol? arg))) controller-text)))
+      (let ((assign-insts (filter (lambda(arg) (eq? (car arg) 'assign)) raw-insts)))
+        (let ((register-list (delete-duplicates (map cadr assign-insts))))
+          (for-each (lambda (register-name)
+                      ((machine 'allocate-register) register-name))
+                    register-list))))
+    ((machine 'install-operations) ops)    
+    ((machine 'install-instruction-sequence)
+     (assemble controller-text machine))
+    ((machine 'install-instruction-scan-results)
+     (inst-scan controller-text (machine 'reg-source)))
+    machine));}}}
+
+(define (make-new-machine);{{{
+  (let ((pc (make-register 'pc))
+        (flag (make-register 'flag))
+        (stack (make-stack))
+        (the-instruction-sequence '())
+        (entry-regs '())
+        (stack-regs '())
+        (sorted-instructions '())
+        (reg-sources (make-hash-table)))
+    (let ((the-ops
+           (list (list 'initialize-stack
+                       (lambda () (stack 'initialize)))
+                 ;;**next for monitored stack (as in section 5.2.4)
+                 ;;  -- comment out if not wanted
+                 (list 'print-stack-statistics
+                       (lambda () (stack 'print-statistics)))))
+          (register-table
+           (list (list 'pc pc) (list 'flag flag))))
+      (define (allocate-register name)
+        (if (assoc name register-table)
+            (error "Multiply defined register: " name)
+            (set! register-table
+                  (cons (list name (make-register name))
+                        register-table)))
+        'register-allocated)
+      (define (lookup-register name);{{{
+        (let ((val (assoc name register-table)))
+          (if val
+              (cadr val)
+              (error "Unknown register:" name))));}}}
+      (define (execute);{{{
+        (let ((insts (get-contents pc)))
+          (if (null? insts)
+              'done
+              (begin
+                ((instruction-execution-proc (car insts)))
+                (execute)))));}}}
+      (define (dispatch message);{{{
+        (case message
+          ((start) (set-contents! pc the-instruction-sequence)
+                   (execute))
+          ((install-instruction-sequence)
+           (lambda (seq) (set! the-instruction-sequence seq)))
+          ((allocate-register) allocate-register)
+          ((get-register) lookup-register)
+          ((install-operations) 
+           (lambda (ops) (set! the-ops (append the-ops ops))))
+          ((stack) stack)
+          ((install-instruction-scan-results) 
+           (lambda(arg-list) (set! sorted-instructions (car arg-list))
+                             (set! entry-regs (cadr arg-list))
+                             (set! stack-regs (caddr arg-list))))
+          ((operations) the-ops)
+          ((reg-source) reg-sources)
+          ((get-sorted-insts) sorted-instructions)
+          ((install-entries) (lambda (arg) (set! entry-regs arg)))
+          ((install-stack-regs) (lambda (arg) (set! stack-regs arg)))
+          ((install-sorted) (lambda (arg) (set! sorted-instructions arg)))
+          ((show-inst-scan) (pretty-print (list "Sorted Instructions: " sorted-instructions
+                                                "Entry point registers: " entry-regs
+                                                "Stack-interacting registers: " stack-regs
+                                                "Register sources: " (hash-fold
+                                                                       (lambda(k v p)
+                                                                         (cons (list k v) p))
+                                                                       '() reg-sources))))
+          (else (error "Unknown request -- MACHINE" message))));}}}
+      dispatch)));}}}
+
+(define fib-machine ;{{{
+  (make-machine ;register-names ops controller-text 
+    (list (list '< <) (list '- -) (list '+ +)) 
+    '(  ; from ch5.scm 
+        (assign continue (label fib-done)) 
+        fib-loop 
+        (test (op <) (reg n) (const 2)) 
+        (branch (label immediate-answer)) 
+        ;; set up to compute Fib(n-1) 
+        (save continue) 
+        (assign continue (label afterfib-n-1)) 
+        (save n)                           ; save old value of n 
+        (assign n (op -) (reg n) (const 1)); clobber n to n-1 
+        (goto (label fib-loop))            ; perform recursive call 
+        afterfib-n-1                         ; upon return, val contains Fib(n-1) 
+        (restore n) 
+        (restore continue) 
+        ;; set up to compute Fib(n-2) 
+        (assign n (op -) (reg n) (const 2)) 
+        (save continue) 
+        (assign continue (label afterfib-n-2)) 
+        (save val)                         ; save Fib(n-1) 
+        (goto (label fib-loop)) 
+        afterfib-n-2                         ; upon return, val contains Fib(n-2) 
+        (assign n (reg val))               ; n now contains Fib(n-2) 
+        (restore val)                      ; val now contains Fib(n-1) 
+        (restore continue) 
+        (assign val                        ; Fib(n-1)+Fib(n-2) 
+                (op +) (reg val) (reg n))  
+        (goto (reg continue))              ; return to caller, answer is in val 
+        immediate-answer 
+        (assign val (reg n))               ; base case: Fib(n)=n 
+        (goto (reg continue)) 
+        fib-done)));}}}
+
+(define (make-stack);{{{
+  (let ((s '())
+        (number-pushes 0)
+        (max-depth 0)
+        (current-depth 0))
+    (define (push x)
+      (set! s (cons x s))
+      (set! number-pushes (+ 1 number-pushes))
+      (set! current-depth (+ 1 current-depth))
+      (set! max-depth (max current-depth max-depth)))
+    (define (pop)
+      (if (null? s)
+          (error "Empty stack -- POP")
+          (let ((top (car s)))
+            (set! s (cdr s))
+            (set! current-depth (- current-depth 1))
+            top)))    
+    (define (initialize)
+      (set! s '())
+      (set! number-pushes 0)
+      (set! max-depth 0)
+      (set! current-depth 0)
+      'done)
+    (define (print-statistics)
+      (newline)
+      (display (list 'total-pushes  '= number-pushes
+                     'maximum-depth '= max-depth))
+      (newline))
+    (define (dispatch message)
+      (cond ((eq? message 'push) push)
+            ((eq? message 'pop) (pop))
+            ((eq? message 'initialize) (initialize))
+            ((eq? message 'print-statistics)
+             (print-statistics))
+            (else
+             (error "Unknown request -- STACK" message))))
+    dispatch));}}}
+
+(define (make-new-machine);{{{
+  (let ((pc (make-register 'pc))
+        (flag (make-register 'flag))
+        (stack (make-stack))
+        (the-instruction-sequence '())
+        (instruction-count 0)
+        (entry-regs '())
+        (stack-regs '())
+        (sorted-instructions '())
+        (reg-sources (make-hash-table)))
+    (let ((the-ops
+           (list (list 'initialize-stack
+                       (lambda () (stack 'initialize)))
+                 ;;**next for monitored stack (as in section 5.2.4)
+                 ;;  -- comment out if not wanted
+                 (list 'print-stack-statistics
+                       (lambda () (stack 'print-statistics)))))
+          (register-table
+           (list (list 'pc pc) (list 'flag flag))))
+      (define (allocate-register name)
+        (if (assoc name register-table)
+            (error "Multiply defined register: " name)
+            (set! register-table
+                  (cons (list name (make-register name))
+                        register-table)))
+        'register-allocated)
+      (define (lookup-register name);{{{
+        (let ((val (assoc name register-table)))
+          (if val
+              (cadr val)
+              (error "Unknown register:" name))));}}}
+      (define (execute);{{{
+        (let ((insts (get-contents pc)))
+          (if (null? insts)
+              (begin (stack 'print-statistics)
+                     (stack 'initialize)
+                     'done)
+              (begin
+                (set! instruction-count (+ instruction-count 1)); Counting this instruction
+                ((instruction-execution-proc (car insts)))
+                (execute)))));}}}
+      (define (dispatch message);{{{
+        (case message
+          ((start) (set! instruction-count 0); Initializing the instruction-count at the beginning of an execution.
+                   (set-contents! pc the-instruction-sequence)
+                   (execute))
+          ((install-instruction-sequence)
+           (lambda (seq) (set! the-instruction-sequence seq)))
+          ((allocate-register) allocate-register)
+          ((get-register) lookup-register)
+          ((install-operations) 
+           (lambda (ops) (set! the-ops (append the-ops ops))))
+          ((stack) stack)
+          ((install-instruction-scan-results) 
+           (lambda(arg-list) (set! sorted-instructions (car arg-list))
+                             (set! entry-regs (cadr arg-list))
+                             (set! stack-regs (caddr arg-list))))
+          ((operations) the-ops)
+          ((reg-source) reg-sources)
+          ((get-sorted-insts) sorted-instructions)
+          ((show-inst-scan) (pretty-print (list "Sorted Instructions: " sorted-instructions
+                                                "Entry point registers: " entry-regs
+                                                "Stack-interacting registers: " stack-regs
+                                                "Register sources: " (hash-fold
+                                                                       (lambda(k v p)
+                                                                         (cons (list k v) p))
+                                                                       '() reg-sources))))
+          ((print-instruction-count) instruction-count); Access to instruction-count
+          ((reset-instruction-count) (set! instruction-count 0)); Explicitly resetting the instruction count (not needed per se)
+          (else (error "Unknown request -- MACHINE" message))));}}}
+      dispatch)));}}}
+
+(define fib-machine ;{{{
+  (make-machine ;register-names ops controller-text 
+    (list (list '< <) (list '- -) (list '+ +)) 
+    '(  ; from ch5.scm 
+        (assign continue (label fib-done)) 
+        fib-loop 
+        (test (op <) (reg n) (const 2)) 
+        (branch (label immediate-answer)) 
+        ;; set up to compute Fib(n-1) 
+        (save continue) 
+        (assign continue (label afterfib-n-1)) 
+        (save n)                           ; save old value of n 
+        (assign n (op -) (reg n) (const 1)); clobber n to n-1 
+        (goto (label fib-loop))            ; perform recursive call 
+        afterfib-n-1                         ; upon return, val contains Fib(n-1) 
+        (restore n) 
+        (restore continue) 
+        ;; set up to compute Fib(n-2) 
+        (assign n (op -) (reg n) (const 2)) 
+        (save continue) 
+        (assign continue (label afterfib-n-2)) 
+        (save val)                         ; save Fib(n-1) 
+        (goto (label fib-loop)) 
+        afterfib-n-2                         ; upon return, val contains Fib(n-2) 
+        (assign n (reg val))               ; n now contains Fib(n-2) 
+        (restore val)                      ; val now contains Fib(n-1) 
+        (restore continue) 
+        (assign val                        ; Fib(n-1)+Fib(n-2) 
+                (op +) (reg val) (reg n))  
+        (goto (reg continue))              ; return to caller, answer is in val 
+        immediate-answer 
+        (assign val (reg n))               ; base case: Fib(n)=n 
+        (goto (reg continue)) 
+        fib-done
+        (perform (op print-stack-statistics))
+        (perform (op initialize-stack)))));}}}
+
+(define fact-machine ;{{{
+  (make-machine 
+    (list (list '- -) (list '* *) (list '+ +) (list '= =))
+    '( (assign continue (label fact-done))     ; set up final return address
+      fact-loop
+      (test (op =) (reg n) (const 1))
+      (branch (label base-case))
+      ;; Set up for the recursive call by saving n and continue.
+      ;; Set up continue so that the computation will continue
+      ;; at after-fact when the subroutine returns.
+      (save continue)
+      (save n)
+      (assign n (op -) (reg n) (const 1))
+      (assign continue (label after-fact))
+      (goto (label fact-loop))
+      after-fact
+      (restore n)
+      (restore continue)
+      (assign val (op *) (reg n) (reg val))   ; val now contains n(n-1)!
+      (goto (reg continue))                   ; return to caller
+      base-case
+      (assign val (const 1))                  ; base case: 1!=1
+      (goto (reg continue))                   ; return to caller
+      fact-done)));}}}
+
+(define (make-new-machine);{{{
+  (let ((pc (make-register 'pc))
+        (flag (make-register 'flag))
+        (stack (make-stack))
+        (the-instruction-sequence '())
+        (instruction-count 0)
+        (entry-regs '())
+        (stack-regs '())
+        (sorted-instructions '())
+        (reg-sources (make-hash-table)))
+    (let ((the-ops
+           (list (list 'initialize-stack
+                       (lambda () (stack 'initialize)))
+                 ;;**next for monitored stack (as in section 5.2.4)
+                 ;;  -- comment out if not wanted
+                 (list 'print-stack-statistics
+                       (lambda () (stack 'print-statistics)))))
+          (register-table
+           (list (list 'pc pc) (list 'flag flag))))
+      (define (allocate-register name)
+        (if (assoc name register-table)
+            (error "Multiply defined register: " name)
+            (set! register-table
+                  (cons (list name (make-register name))
+                        register-table)))
+        'register-allocated)
+      (define (lookup-register name);{{{
+        (let ((val (assoc name register-table)))
+          (if val
+              (cadr val)
+              (error "Unknown register:" name))));}}}
+      (define (execute);{{{
+        (let ((insts (get-contents pc)))
+          (if (null? insts)
+              (begin (stack 'print-statistics)
+                     (stack 'initialize)
+                     'done)
+              (begin
+                (set! instruction-count (+ instruction-count 1)); Counting this instruction
+                ((instruction-execution-proc (car insts)))
+                (execute)))));}}}
+      (define (dispatch message);{{{
+        (case message
+          ((start) (set! instruction-count 0); Initializing the instruction-count at the beginning of an execution.
+                   (set-contents! pc the-instruction-sequence)
+                   (execute))
+          ((install-instruction-sequence)
+           (lambda (seq) (set! the-instruction-sequence seq)))
+          ((allocate-register) allocate-register)
+          ((get-register) lookup-register)
+          ((install-operations) 
+           (lambda (ops) (set! the-ops (append the-ops ops))))
+          ((stack) stack)
+          ((install-instruction-scan-results) 
+           (lambda(arg-list) (set! sorted-instructions (car arg-list))
+                             (set! entry-regs (cadr arg-list))
+                             (set! stack-regs (caddr arg-list))))
+          ((operations) the-ops)
+          ((reg-source) reg-sources)
+          ((get-sorted-insts) sorted-instructions)
+          ((show-inst-scan) (pretty-print (list "Sorted Instructions: " sorted-instructions
+                                                "Entry point registers: " entry-regs
+                                                "Stack-interacting registers: " stack-regs
+                                                "Register sources: " (hash-fold
+                                                                       (lambda(k v p)
+                                                                         (cons (list k v) p))
+                                                                       '() reg-sources))))
+          ((print-instruction-count) instruction-count); Access to instruction-count
+          ((reset-instruction-count) (set! instruction-count 0)); Explicitly resetting the instruction count (not needed per se)
+          (else (error "Unknown request -- MACHINE" message))));}}}
+      dispatch)));}}}
+
+(define fib-machine ;{{{
+  (make-machine ;register-names ops controller-text 
+    (list (list '< <) (list '- -) (list '+ +)) 
+    '(  ; from ch5.scm 
+        (assign continue (label fib-done)) 
+        fib-loop 
+        (test (op <) (reg n) (const 2)) 
+        (branch (label immediate-answer)) 
+        ;; set up to compute Fib(n-1) 
+        (save continue) 
+        (assign continue (label afterfib-n-1)) 
+        (save n)                           ; save old value of n 
+        (assign n (op -) (reg n) (const 1)); clobber n to n-1 
+        (goto (label fib-loop))            ; perform recursive call 
+        afterfib-n-1                         ; upon return, val contains Fib(n-1) 
+        (restore n) 
+        (restore continue) 
+        ;; set up to compute Fib(n-2) 
+        (assign n (op -) (reg n) (const 2)) 
+        (save continue) 
+        (assign continue (label afterfib-n-2)) 
+        (save val)                         ; save Fib(n-1) 
+        (goto (label fib-loop)) 
+        afterfib-n-2                         ; upon return, val contains Fib(n-2) 
+        (assign n (reg val))               ; n now contains Fib(n-2) 
+        (restore val)                      ; val now contains Fib(n-1) 
+        (restore continue) 
+        (assign val                        ; Fib(n-1)+Fib(n-2) 
+                (op +) (reg val) (reg n))  
+        (goto (reg continue))              ; return to caller, answer is in val 
+        immediate-answer 
+        (assign val (reg n))               ; base case: Fib(n)=n 
+        (goto (reg continue)) 
+        fib-done
+        (perform (op print-stack-statistics))
+        (perform (op initialize-stack)))));}}}
+
+(define fact-machine ;{{{
+  (make-machine 
+    (list (list '- -) (list '* *) (list '+ +) (list '= =))
+    '( (assign continue (label fact-done))     ; set up final return address
+      fact-loop
+      (test (op =) (reg n) (const 1))
+      (branch (label base-case))
+      ;; Set up for the recursive call by saving n and continue.
+      ;; Set up continue so that the computation will continue
+      ;; at after-fact when the subroutine returns.
+      (save continue)
+      (save n)
+      (assign n (op -) (reg n) (const 1))
+      (assign continue (label after-fact))
+      (goto (label fact-loop))
+      after-fact
+      (restore n)
+      (restore continue)
+      (assign val (op *) (reg n) (reg val))   ; val now contains n(n-1)!
+      (goto (reg continue))                   ; return to caller
+      base-case
+      (assign val (const 1))                  ; base case: 1!=1
+      (goto (reg continue))                   ; return to caller
+      fact-done
+      (perform (op print-stack-statistics))
+      (perform (op initialize-stack)))));}}}
+
+(define (make-new-machine);{{{
+  (let ((pc (make-register 'pc))
+        (flag (make-register 'flag))
+        (stack (make-stack))
+        (the-instruction-sequence '())
+        (instruction-count 0) ; Instruction counter
+        (tracing-mode #f) ; Tracing mode defaulting on the OFF position.
+        (entry-regs '())
+        (stack-regs '())
+        (sorted-instructions '())
+        (reg-sources (make-hash-table)))
+    (let ((the-ops
+           (list (list 'initialize-stack
+                       (lambda () (stack 'initialize)))
+                 ;;**next for monitored stack (as in section 5.2.4)
+                 ;;  -- comment out if not wanted
+                 (list 'print-stack-statistics
+                       (lambda () (stack 'print-statistics)))))
+          (register-table
+           (list (list 'pc pc) (list 'flag flag))))
+      (define (allocate-register name)
+        (if (assoc name register-table)
+            (error "Multiply defined register: " name)
+            (set! register-table
+                  (cons (list name (make-register name))
+                        register-table)))
+        'register-allocated)
+      (define (lookup-register name);{{{
+        (let ((val (assoc name register-table)))
+          (if val
+              (cadr val)
+              (error "Unknown register:" name))));}}}
+      (define (execute);{{{
+        (let ((insts (get-contents pc)))
+          (if (null? insts)
+            (begin (stack 'print-statistics)
+                   (stack 'initialize)
+                   'done)
+              (begin
+                (set! instruction-count (+ instruction-count 1)); Counting this instruction
+                (if tracing-mode
+                  (begin (display (instruction-text (car insts)))
+                         (newline))) ; If the tracing is on,
+                                     ; display the instruction text
+                ((instruction-execution-proc (car insts)))
+                (execute)))));}}}
+      (define (dispatch message);{{{
+        (case message
+          ((start) (set! instruction-count 0); Initializing the instruction-count at the beginning of an execution.
+                   (set-contents! pc the-instruction-sequence)
+                   (execute))
+          ((install-instruction-sequence)
+           (lambda (seq) (set! the-instruction-sequence seq)))
+          ((allocate-register) allocate-register)
+          ((get-register) lookup-register)
+          ((install-operations) 
+           (lambda (ops) (set! the-ops (append the-ops ops))))
+          ((stack) stack)
+          ((install-instruction-scan-results) 
+           (lambda(arg-list) (set! sorted-instructions (car arg-list))
+                             (set! entry-regs (cadr arg-list))
+                             (set! stack-regs (caddr arg-list))))
+          ((operations) the-ops)
+          ((reg-source) reg-sources)
+          ((get-sorted-insts) sorted-instructions)
+          ((show-inst-scan) (pretty-print (list "Sorted Instructions: " sorted-instructions
+                                                "Entry point registers: " entry-regs
+                                                "Stack-interacting registers: " stack-regs
+                                                "Register sources: " (hash-fold
+                                                                       (lambda(k v p)
+                                                                         (cons (list k v) p))
+                                                                       '() reg-sources))))
+          ((print-instruction-count) instruction-count); Access to instruction-count
+          ((reset-instruction-count) (set! instruction-count 0)); Explicitly resetting the instruction count
+          ; (not needed per se, but SICP asks and I try to deliver ¯\_(ツ)_/¯)
+          ((tracing-on) (set! tracing-mode #t)) ;; Tracing mode toggles
+          ((tracing-off) (set! tracing-mode #f))
+          (else (error "Unknown request -- MACHINE" message))));}}}
+      dispatch)));}}}
+
+(define fib-machine ;{{{
+  (make-machine ;register-names ops controller-text 
+    (list (list '< <) (list '- -) (list '+ +)) 
+    '(  ; from ch5.scm 
+        (assign continue (label fib-done)) 
+        fib-loop 
+        (test (op <) (reg n) (const 2)) 
+        (branch (label immediate-answer)) 
+        ;; set up to compute Fib(n-1) 
+        (save continue) 
+        (assign continue (label afterfib-n-1)) 
+        (save n)                           ; save old value of n 
+        (assign n (op -) (reg n) (const 1)); clobber n to n-1 
+        (goto (label fib-loop))            ; perform recursive call 
+        afterfib-n-1                         ; upon return, val contains Fib(n-1) 
+        (restore n) 
+        (restore continue) 
+        ;; set up to compute Fib(n-2) 
+        (assign n (op -) (reg n) (const 2)) 
+        (save continue) 
+        (assign continue (label afterfib-n-2)) 
+        (save val)                         ; save Fib(n-1) 
+        (goto (label fib-loop)) 
+        afterfib-n-2                         ; upon return, val contains Fib(n-2) 
+        (assign n (reg val))               ; n now contains Fib(n-2) 
+        (restore val)                      ; val now contains Fib(n-1) 
+        (restore continue) 
+        (assign val                        ; Fib(n-1)+Fib(n-2) 
+                (op +) (reg val) (reg n))  
+        (goto (reg continue))              ; return to caller, answer is in val 
+        immediate-answer 
+        (assign val (reg n))               ; base case: Fib(n)=n 
+        (goto (reg continue)) 
+        fib-done
+        (perform (op print-stack-statistics))
+        (perform (op initialize-stack)))));}}}
+
+(define fact-machine ;{{{
+  (make-machine 
+    (list (list '- -) (list '* *) (list '+ +) (list '= =))
+    '( (assign continue (label fact-done))     ; set up final return address
+      fact-loop
+      (test (op =) (reg n) (const 1))
+      (branch (label base-case))
+      ;; Set up for the recursive call by saving n and continue.
+      ;; Set up continue so that the computation will continue
+      ;; at after-fact when the subroutine returns.
+      (save continue)
+      (save n)
+      (assign n (op -) (reg n) (const 1))
+      (assign continue (label after-fact))
+      (goto (label fact-loop))
+      after-fact
+      (restore n)
+      (restore continue)
+      (assign val (op *) (reg n) (reg val))   ; val now contains n(n-1)!
+      (goto (reg continue))                   ; return to caller
+      base-case
+      (assign val (const 1))                  ; base case: 1!=1
+      (goto (reg continue))                   ; return to caller
+      fact-done)));}}}
+
+(define (make-instruction text)
+  (cons text (cons '() '())))
+
+(define (instruction-text inst)
+  (car inst))
+
+(define (instruction-execution-proc inst)
+  (cadr inst))
+
+(define (instruction-labels inst)
+  (cddr inst))
+
+(define (set-instruction-execution-proc! inst proc)
+  (set-car! (cdr inst) proc))
+
+(define (set-instruction-labels! inst labels)
+  (set-cdr! (cdr inst) labels))
+
+(define (add-a-instruction-label! inst label)
+  (set-instruction-labels! inst (cons label (instruction-labels inst))))
+
+;;Changes in procedure extract-labels
+(define (extract-labels text receive)
+  (if (null? text)
+    (receive '() '())
+    (extract-labels (cdr text)
+                    (lambda (insts labels)
+                      (let ((next-inst (car text)))
+                        (if (symbol? next-inst)
+                          (begin
+                            ;;initially i forgot this null check which caused me some
+                            ;;trouble while testing.
+                            (if (not (null? insts))                                 ;;; 
+                              (add-a-instruction-label! (car insts) next-inst))   ;;;
+                            (receive insts
+                                     (cons (make-label-entry next-inst
+                                                             insts)
+                                           labels)))
+                          (receive (cons (make-instruction next-inst)
+                                         insts)
+                                   labels)))))))
+
+(define (make-new-machine);{{{
+  (let ((pc (make-register 'pc))
+        (flag (make-register 'flag))
+        (stack (make-stack))
+        (the-instruction-sequence '())
+        (instruction-count 0) ; Instruction counter
+        (tracing-mode #f) ; Tracing mode defaulting on the OFF position.
+        (entry-regs '())
+        (stack-regs '())
+        (sorted-instructions '())
+        (reg-sources (make-hash-table)))
+    (let ((the-ops
+           (list (list 'initialize-stack
+                       (lambda () (stack 'initialize)))
+                 ;;**next for monitored stack (as in section 5.2.4)
+                 ;;  -- comment out if not wanted
+                 (list 'print-stack-statistics
+                       (lambda () (stack 'print-statistics)))))
+          (register-table
+           (list (list 'pc pc) (list 'flag flag))))
+      (define (allocate-register name)
+        (if (assoc name register-table)
+            (error "Multiply defined register: " name)
+            (set! register-table
+                  (cons (list name (make-register name))
+                        register-table)))
+        'register-allocated)
+      (define (lookup-register name);{{{
+        (let ((val (assoc name register-table)))
+          (if val
+              (cadr val)
+              (error "Unknown register:" name))));}}}
+      (define (execute)
+        (let ((insts (get-contents pc)))
+          (if (null? insts)
+            (begin (stack 'print-statistics)
+                   (stack 'initialize)
+                   'done)
+            (begin
+              (if tracing-mode
+                (begin
+                  (for-each (lambda(label)                     ;;;
+                              (newline)                        ;;;
+                              (display "Moving over label: ")  ;;;
+                              (display label))                 ;;;
+                            (instruction-labels (car insts)))  ;;;
+                  (newline)
+                  (display "Executing instruction: ") (newline)
+                  (display (instruction-text (car insts))) (newline)))
+              ((instruction-execution-proc (car insts)))
+              (set! instruction-count (+ instruction-count 1))
+              (execute)))))
+      (define (dispatch message);{{{
+        (case message
+          ((start) (set! instruction-count 0); Initializing the instruction-count at the beginning of an execution.
+                   (set-contents! pc the-instruction-sequence)
+                   (execute))
+          ((install-instruction-sequence)
+           (lambda (seq) (set! the-instruction-sequence seq)))
+          ((allocate-register) allocate-register)
+          ((get-register) lookup-register)
+          ((install-operations) 
+           (lambda (ops) (set! the-ops (append the-ops ops))))
+          ((stack) stack)
+          ((install-instruction-scan-results) 
+           (lambda(arg-list) (set! sorted-instructions (car arg-list))
+                             (set! entry-regs (cadr arg-list))
+                             (set! stack-regs (caddr arg-list))))
+          ((operations) the-ops)
+          ((reg-source) reg-sources)
+          ((get-sorted-insts) sorted-instructions)
+          ((show-inst-scan) (pretty-print (list "Sorted Instructions: " sorted-instructions
+                                                "Entry point registers: " entry-regs
+                                                "Stack-interacting registers: " stack-regs
+                                                "Register sources: " (hash-fold
+                                                                       (lambda(k v p)
+                                                                         (cons (list k v) p))
+                                                                       '() reg-sources))))
+          ((print-instruction-count) instruction-count); Access to instruction-count
+          ((reset-instruction-count) (set! instruction-count 0)); Explicitly resetting the instruction count
+          ; (not needed per se, but SICP asks and I try to deliver ¯\_(ツ)_/¯)
+          ((tracing-on) (set! tracing-mode #t)) ;; Tracing mode toggles
+          ((tracing-off) (set! tracing-mode #f))
+          (else (error "Unknown request -- MACHINE" message))));}}}
+      dispatch)));}}}
+
+(define fib-machine ;{{{
+  (make-machine ;register-names ops controller-text 
+    (list (list '< <) (list '- -) (list '+ +)) 
+    '(  ; from ch5.scm 
+        (assign continue (label fib-done)) 
+        fib-loop 
+        (test (op <) (reg n) (const 2)) 
+        (branch (label immediate-answer)) 
+        ;; set up to compute Fib(n-1) 
+        (save continue) 
+        (assign continue (label afterfib-n-1)) 
+        (save n)                           ; save old value of n 
+        (assign n (op -) (reg n) (const 1)); clobber n to n-1 
+        (goto (label fib-loop))            ; perform recursive call 
+        afterfib-n-1                         ; upon return, val contains Fib(n-1) 
+        (restore n) 
+        (restore continue) 
+        ;; set up to compute Fib(n-2) 
+        (assign n (op -) (reg n) (const 2)) 
+        (save continue) 
+        (assign continue (label afterfib-n-2)) 
+        (save val)                         ; save Fib(n-1) 
+        (goto (label fib-loop)) 
+        afterfib-n-2                         ; upon return, val contains Fib(n-2) 
+        (assign n (reg val))               ; n now contains Fib(n-2) 
+        (restore val)                      ; val now contains Fib(n-1) 
+        (restore continue) 
+        (assign val                        ; Fib(n-1)+Fib(n-2) 
+                (op +) (reg val) (reg n))  
+        (goto (reg continue))              ; return to caller, answer is in val 
+        immediate-answer 
+        (assign val (reg n))               ; base case: Fib(n)=n 
+        (goto (reg continue)) 
+        fib-done
+        (perform (op print-stack-statistics))
+        (perform (op initialize-stack)))));}}}
+
+(define fact-machine ;{{{
+  (make-machine 
+    (list (list '- -) (list '* *) (list '+ +) (list '= =))
+    '( (assign continue (label fact-done))     ; set up final return address
+      fact-loop
+      (test (op =) (reg n) (const 1))
+      (branch (label base-case))
+      ;; Set up for the recursive call by saving n and continue.
+      ;; Set up continue so that the computation will continue
+      ;; at after-fact when the subroutine returns.
+      (save continue)
+      (save n)
+      (assign n (op -) (reg n) (const 1))
+      (assign continue (label after-fact))
+      (goto (label fact-loop))
+      after-fact
+      (restore n)
+      (restore continue)
+      (assign val (op *) (reg n) (reg val))   ; val now contains n(n-1)!
+      (goto (reg continue))                   ; return to caller
+      base-case
+      (assign val (const 1))                  ; base case: 1!=1
+      (goto (reg continue))                   ; return to caller
+      fact-done)));}}}
+
+(define (make-register name);{{{
+  (let ((contents '*unassigned*)
+        (tracing-mode #f)
+        (reg-name name))
+    (define (dispatch message)
+      (cond ((eq? message 'get) contents)
+            ((eq? message 'set)
+             (lambda (value) (if tracing-mode 
+                               (begin (display (list "Setting register" reg-name " to value: " value))
+                                      (newline)
+                                      (set! contents value))
+                               (set! contents value))))
+            ((eq? message 'tracing-on) (set! tracing-mode #t))
+            ((eq? message 'tracing-off) (set! tracing-mode #f))
+            (else
+             (error "Unknown request -- REGISTER" message))))
+    dispatch));}}}
+
+(define fact-machine ;{{{
+  (make-machine 
+    (list (list '- -) (list '* *) (list '+ +) (list '= =))
+    '( (assign continue (label fact-done))     ; set up final return address
+      fact-loop
+      (test (op =) (reg n) (const 1))
+      (branch (label base-case))
+      ;; Set up for the recursive call by saving n and continue.
+      ;; Set up continue so that the computation will continue
+      ;; at after-fact when the subroutine returns.
+      (save continue)
+      (save n)
+      (assign n (op -) (reg n) (const 1))
+      (assign continue (label after-fact))
+      (goto (label fact-loop))
+      after-fact
+      (restore n)
+      (restore continue)
+      (assign val (op *) (reg n) (reg val))   ; val now contains n(n-1)!
+      (goto (reg continue))                   ; return to caller
+      base-case
+      (assign val (const 1))                  ; base case: 1!=1
+      (goto (reg continue))                   ; return to caller
+      fact-done)));}}}
+
+((get-register fact-machine 'n) 'tracing-on)
+((get-register fact-machine 'val) 'tracing-on)
+(set-register-contents! fact-machine 'n 18)
+(fact-machine 'tracing-on)
+(start fact-machine)
