@@ -38,7 +38,7 @@
 
 (define (push stack value)
   ((stack 'push) value))
-  
+
 (define (start machine)
   (machine 'start))
 
@@ -251,73 +251,6 @@
 
 
 
-(define expt-machine
-  (make-machine
-    '(n b val continue)
-    (list (list '* *) (list '- -) (list '= =))
-    '(
-      (assign continue (label done))
-      loop
-      (test (op =) (reg n) (const 0))
-      (branch (label base-case))
-      (save continue)
-      (assign continue (label after))
-      (assign n (op -) (reg n) (const 1))
-      (goto (label loop))
-      after
-      (restore continue)
-      (assign val (op *) (reg val) (reg b))
-      (goto (reg continue))
-      base-case
-      (assign val (const 1))   
-      (goto (reg continue))
-      done)))
-
-(define fib-machine 
-  (make-machine ;register-names ops controller-text 
-    '(n val continue) 
-    (list (list '< <) (list '- -) (list '+ +)) 
-    '(  ; from ch5.scm 
-        (assign continue (label fib-done)) 
-        fib-loop 
-        (test (op <) (reg n) (const 2)) 
-        (branch (label immediate-answer)) 
-        ;; set up to compute Fib(n-1) 
-        (save continue) 
-        (assign continue (label afterfib-n-1)) 
-        (save n)                           ; save old value of n 
-        (assign n (op -) (reg n) (const 1)); clobber n to n-1 
-        (goto (label fib-loop))            ; perform recursive call 
-        afterfib-n-1                         ; upon return, val contains Fib(n-1) 
-        (restore n) 
-        (restore continue) 
-        ;; set up to compute Fib(n-2) 
-        (assign n (op -) (reg n) (const 2)) 
-        (save continue) 
-        (assign continue (label afterfib-n-2)) 
-        (save val)                         ; save Fib(n-1) 
-        (goto (label fib-loop)) 
-        afterfib-n-2                         ; upon return, val contains Fib(n-2) 
-        (assign n (reg val))               ; n now contains Fib(n-2) 
-        (restore val)                      ; val now contains Fib(n-1) 
-        (restore continue) 
-        (assign val                        ; Fib(n-1)+Fib(n-2) 
-                (op +) (reg val) (reg n))  
-        (goto (reg continue))              ; return to caller, answer is in val 
-        immediate-answer 
-        (assign val (reg n))               ; base case: Fib(n)=n 
-        (goto (reg continue)) 
-        fib-done)))
-
-;; scheme@(guile-user)> (set-register-contents! fib-machine 'n 14)
-;; $1 = done
-;; scheme@(guile-user)> (start fib-machine )
-;; $2 = done
-;; scheme@(guile-user)> (get-register-contents fib-machine 'val)
-;; $3 = 377
-
-;; So that's cool
-
 ;; zenAndroid :: when pushing the pair in the stack, helps to save the register's name.
 
 (define (get-reg-name register)
@@ -359,18 +292,6 @@
               (advance-pc pc))
             (error "Stack top not conforming to the request -- MAKE-RESTORE" 
                    (list reg-name reg-at-top-of-stack))))))))
-
-(define mach
-  (make-machine
-    '(x y)
-    (list (list '* *) (list '- -) (list '= =))
-    '(
-      (assign x (const 5))
-      (assign y (const 1))
-      (save x)
-      (save y)
-      (restore y)
-      )))
 
 (define (inst-scan insts reg-source);{{{
   (define (insts->entry raw-insts);{{{
@@ -414,65 +335,6 @@
             (insts->entry raw-insts)
             (insts->stack-regs raw-insts))));}}}
 
-
-(define expt-machine
-  (make-machine
-    '(n b val continue)
-    (list (list '* *) (list '- -) (list '= =))
-    '(
-      (assign continue (label done))
-      loop
-      (test (op =) (reg n) (const 0))
-      (branch (label base-case))
-      (save continue)
-      (assign continue (label after))
-      (assign n (op -) (reg n) (const 1))
-      (goto (label loop))
-      after
-      (restore continue)
-      (assign val (op *) (reg val) (reg b))
-      (goto (reg continue))
-      base-case
-      (assign val (const 1))   
-      (goto (reg continue))
-      done)))
-
-(define fib-machine 
-  (make-machine ;register-names ops controller-text 
-    '(n val continue) 
-    (list (list '< <) (list '- -) (list '+ +)) 
-    '(  ; from ch5.scm 
-        (assign continue (label fib-done)) 
-        fib-loop 
-        (test (op <) (reg n) (const 2)) 
-        (branch (label immediate-answer)) 
-        ;; set up to compute Fib(n-1) 
-        (save continue) 
-        (assign continue (label afterfib-n-1)) 
-        (save n)                           ; save old value of n 
-        (assign n (op -) (reg n) (const 1)); clobber n to n-1 
-        (goto (label fib-loop))            ; perform recursive call 
-        afterfib-n-1                         ; upon return, val contains Fib(n-1) 
-        (restore n) 
-        (restore continue) 
-        ;; set up to compute Fib(n-2) 
-        (assign n (op -) (reg n) (const 2)) 
-        (save continue) 
-        (assign continue (label afterfib-n-2)) 
-        (save val)                         ; save Fib(n-1) 
-        (goto (label fib-loop)) 
-        afterfib-n-2                         ; upon return, val contains Fib(n-2) 
-        (assign n (reg val))               ; n now contains Fib(n-2) 
-        (restore val)                      ; val now contains Fib(n-1) 
-        (restore continue) 
-        (assign val                        ; Fib(n-1)+Fib(n-2) 
-                (op +) (reg val) (reg n))  
-        (goto (reg continue))              ; return to caller, answer is in val 
-        immediate-answer 
-        (assign val (reg n))               ; base case: Fib(n)=n 
-        (goto (reg continue)) 
-        fib-done)))
-
 (define (make-machine ops controller-text);{{{
   (let ((machine (make-new-machine)))
     (let ((raw-insts (filter (lambda(arg) (not (symbol? arg))) controller-text)))
@@ -487,41 +349,6 @@
     ((machine 'install-instruction-scan-results)
      (inst-scan controller-text (machine 'reg-source)))
     machine));}}}
-
-(define fib-machine ;{{{
-  (make-machine ;register-names ops controller-text 
-    (list (list '< <) (list '- -) (list '+ +)) 
-    '(  ; from ch5.scm 
-        (assign continue (label fib-done)) 
-        fib-loop 
-        (test (op <) (reg n) (const 2)) 
-        (branch (label immediate-answer)) 
-        ;; set up to compute Fib(n-1) 
-        (save continue) 
-        (assign continue (label afterfib-n-1)) 
-        (save n)                           ; save old value of n 
-        (assign n (op -) (reg n) (const 1)); clobber n to n-1 
-        (goto (label fib-loop))            ; perform recursive call 
-        afterfib-n-1                         ; upon return, val contains Fib(n-1) 
-        (restore n) 
-        (restore continue) 
-        ;; set up to compute Fib(n-2) 
-        (assign n (op -) (reg n) (const 2)) 
-        (save continue) 
-        (assign continue (label afterfib-n-2)) 
-        (save val)                         ; save Fib(n-1) 
-        (goto (label fib-loop)) 
-        afterfib-n-2                         ; upon return, val contains Fib(n-2) 
-        (assign n (reg val))               ; n now contains Fib(n-2) 
-        (restore val)                      ; val now contains Fib(n-1) 
-        (restore continue) 
-        (assign val                        ; Fib(n-1)+Fib(n-2) 
-                (op +) (reg val) (reg n))  
-        (goto (reg continue))              ; return to caller, answer is in val 
-        immediate-answer 
-        (assign val (reg n))               ; base case: Fib(n)=n 
-        (goto (reg continue)) 
-        fib-done)));}}}
 
 (define (make-stack);{{{
   (let ((s '())
@@ -539,7 +366,11 @@
           (let ((top (car s)))
             (set! s (cdr s))
             (set! current-depth (- current-depth 1))
-            top)))    
+            top)))
+    (define (peek)
+      (if (null? s)
+          (error "Empty stack -- POP")
+          (car s)))    
     (define (initialize)
       (set! s '())
       (set! number-pushes 0)
@@ -554,6 +385,7 @@
     (define (dispatch message)
       (cond ((eq? message 'push) push)
             ((eq? message 'pop) (pop))
+            ((eq? message 'peek) (peek))
             ((eq? message 'initialize) (initialize))
             ((eq? message 'print-statistics)
              (print-statistics))
@@ -561,193 +393,6 @@
              (error "Unknown request -- STACK" message))))
     dispatch));}}}
 
-(define fib-machine ;{{{
-  (make-machine ;register-names ops controller-text 
-    (list (list '< <) (list '- -) (list '+ +)) 
-    '(  ; from ch5.scm 
-        (assign continue (label fib-done)) 
-        fib-loop 
-        (test (op <) (reg n) (const 2)) 
-        (branch (label immediate-answer)) 
-        ;; set up to compute Fib(n-1) 
-        (save continue) 
-        (assign continue (label afterfib-n-1)) 
-        (save n)                           ; save old value of n 
-        (assign n (op -) (reg n) (const 1)); clobber n to n-1 
-        (goto (label fib-loop))            ; perform recursive call 
-        afterfib-n-1                         ; upon return, val contains Fib(n-1) 
-        (restore n) 
-        (restore continue) 
-        ;; set up to compute Fib(n-2) 
-        (assign n (op -) (reg n) (const 2)) 
-        (save continue) 
-        (assign continue (label afterfib-n-2)) 
-        (save val)                         ; save Fib(n-1) 
-        (goto (label fib-loop)) 
-        afterfib-n-2                         ; upon return, val contains Fib(n-2) 
-        (assign n (reg val))               ; n now contains Fib(n-2) 
-        (restore val)                      ; val now contains Fib(n-1) 
-        (restore continue) 
-        (assign val                        ; Fib(n-1)+Fib(n-2) 
-                (op +) (reg val) (reg n))  
-        (goto (reg continue))              ; return to caller, answer is in val 
-        immediate-answer 
-        (assign val (reg n))               ; base case: Fib(n)=n 
-        (goto (reg continue)) 
-        fib-done
-        (perform (op print-stack-statistics))
-        (perform (op initialize-stack)))));}}}
-
-(define fact-machine ;{{{
-  (make-machine 
-    (list (list '- -) (list '* *) (list '+ +) (list '= =))
-    '( (assign continue (label fact-done))     ; set up final return address
-      fact-loop
-      (test (op =) (reg n) (const 1))
-      (branch (label base-case))
-      ;; Set up for the recursive call by saving n and continue.
-      ;; Set up continue so that the computation will continue
-      ;; at after-fact when the subroutine returns.
-      (save continue)
-      (save n)
-      (assign n (op -) (reg n) (const 1))
-      (assign continue (label after-fact))
-      (goto (label fact-loop))
-      after-fact
-      (restore n)
-      (restore continue)
-      (assign val (op *) (reg n) (reg val))   ; val now contains n(n-1)!
-      (goto (reg continue))                   ; return to caller
-      base-case
-      (assign val (const 1))                  ; base case: 1!=1
-      (goto (reg continue))                   ; return to caller
-      fact-done)));}}}
-
-(define fib-machine ;{{{
-  (make-machine ;register-names ops controller-text 
-    (list (list '< <) (list '- -) (list '+ +)) 
-    '(  ; from ch5.scm 
-        (assign continue (label fib-done)) 
-        fib-loop 
-        (test (op <) (reg n) (const 2)) 
-        (branch (label immediate-answer)) 
-        ;; set up to compute Fib(n-1) 
-        (save continue) 
-        (assign continue (label afterfib-n-1)) 
-        (save n)                           ; save old value of n 
-        (assign n (op -) (reg n) (const 1)); clobber n to n-1 
-        (goto (label fib-loop))            ; perform recursive call 
-        afterfib-n-1                         ; upon return, val contains Fib(n-1) 
-        (restore n) 
-        (restore continue) 
-        ;; set up to compute Fib(n-2) 
-        (assign n (op -) (reg n) (const 2)) 
-        (save continue) 
-        (assign continue (label afterfib-n-2)) 
-        (save val)                         ; save Fib(n-1) 
-        (goto (label fib-loop)) 
-        afterfib-n-2                         ; upon return, val contains Fib(n-2) 
-        (assign n (reg val))               ; n now contains Fib(n-2) 
-        (restore val)                      ; val now contains Fib(n-1) 
-        (restore continue) 
-        (assign val                        ; Fib(n-1)+Fib(n-2) 
-                (op +) (reg val) (reg n))  
-        (goto (reg continue))              ; return to caller, answer is in val 
-        immediate-answer 
-        (assign val (reg n))               ; base case: Fib(n)=n 
-        (goto (reg continue)) 
-        fib-done
-        (perform (op print-stack-statistics))
-        (perform (op initialize-stack)))));}}}
-
-(define fact-machine ;{{{
-  (make-machine 
-    (list (list '- -) (list '* *) (list '+ +) (list '= =))
-    '( (assign continue (label fact-done))     ; set up final return address
-      fact-loop
-      (test (op =) (reg n) (const 1))
-      (branch (label base-case))
-      ;; Set up for the recursive call by saving n and continue.
-      ;; Set up continue so that the computation will continue
-      ;; at after-fact when the subroutine returns.
-      (save continue)
-      (save n)
-      (assign n (op -) (reg n) (const 1))
-      (assign continue (label after-fact))
-      (goto (label fact-loop))
-      after-fact
-      (restore n)
-      (restore continue)
-      (assign val (op *) (reg n) (reg val))   ; val now contains n(n-1)!
-      (goto (reg continue))                   ; return to caller
-      base-case
-      (assign val (const 1))                  ; base case: 1!=1
-      (goto (reg continue))                   ; return to caller
-      fact-done
-      (perform (op print-stack-statistics))
-      (perform (op initialize-stack)))));}}}
-
-(define fib-machine ;{{{
-  (make-machine ;register-names ops controller-text 
-    (list (list '< <) (list '- -) (list '+ +)) 
-    '(  ; from ch5.scm 
-        (assign continue (label fib-done)) 
-        fib-loop 
-        (test (op <) (reg n) (const 2)) 
-        (branch (label immediate-answer)) 
-        ;; set up to compute Fib(n-1) 
-        (save continue) 
-        (assign continue (label afterfib-n-1)) 
-        (save n)                           ; save old value of n 
-        (assign n (op -) (reg n) (const 1)); clobber n to n-1 
-        (goto (label fib-loop))            ; perform recursive call 
-        afterfib-n-1                         ; upon return, val contains Fib(n-1) 
-        (restore n) 
-        (restore continue) 
-        ;; set up to compute Fib(n-2) 
-        (assign n (op -) (reg n) (const 2)) 
-        (save continue) 
-        (assign continue (label afterfib-n-2)) 
-        (save val)                         ; save Fib(n-1) 
-        (goto (label fib-loop)) 
-        afterfib-n-2                         ; upon return, val contains Fib(n-2) 
-        (assign n (reg val))               ; n now contains Fib(n-2) 
-        (restore val)                      ; val now contains Fib(n-1) 
-        (restore continue) 
-        (assign val                        ; Fib(n-1)+Fib(n-2) 
-                (op +) (reg val) (reg n))  
-        (goto (reg continue))              ; return to caller, answer is in val 
-        immediate-answer 
-        (assign val (reg n))               ; base case: Fib(n)=n 
-        (goto (reg continue)) 
-        fib-done
-        (perform (op print-stack-statistics))
-        (perform (op initialize-stack)))));}}}
-
-(define fact-machine ;{{{
-  (make-machine 
-    (list (list '- -) (list '* *) (list '+ +) (list '= =))
-    '( (assign continue (label fact-done))     ; set up final return address
-      fact-loop
-      (test (op =) (reg n) (const 1))
-      (branch (label base-case))
-      ;; Set up for the recursive call by saving n and continue.
-      ;; Set up continue so that the computation will continue
-      ;; at after-fact when the subroutine returns.
-      (save continue)
-      (save n)
-      (assign n (op -) (reg n) (const 1))
-      (assign continue (label after-fact))
-      (goto (label fact-loop))
-      after-fact
-      (restore n)
-      (restore continue)
-      (assign val (op *) (reg n) (reg val))   ; val now contains n(n-1)!
-      (goto (reg continue))                   ; return to caller
-      base-case
-      (assign val (const 1))                  ; base case: 1!=1
-      (goto (reg continue))                   ; return to caller
-      fact-done)));}}}
 
 (define (make-instruction text)
   (cons text (cons '() '())))
@@ -790,6 +435,26 @@
                           (receive (cons (make-instruction next-inst)
                                          insts)
                                    labels)))))))
+
+(define (make-register name);{{{
+  (let ((contents '*unassigned*)
+        (tracing-mode #f)
+        (reg-name name))
+    (define (dispatch message)
+      (cond ((eq? message 'get) contents)
+            ((eq? message 'set)
+             (lambda (value) (if tracing-mode 
+                               (begin (display (list "Setting register" reg-name " to value: " value))
+                                      (newline)
+                                      (set! contents value))
+                               (set! contents value))))
+            ((eq? message 'name) reg-name)
+            ((eq? message 'tracing-on) (set! tracing-mode #t))
+            ((eq? message 'tracing-off) (set! tracing-mode #f))
+            (else
+             (error "Unknown request -- REGISTER" message))))
+    dispatch));}}}
+
 
 (define (make-new-machine);{{{
   (let ((pc (make-register 'pc))
@@ -938,24 +603,6 @@
       (assign val (const 1))                  ; base case: 1!=1
       (goto (reg continue))                   ; return to caller
       fact-done)));}}}
-
-(define (make-register name);{{{
-  (let ((contents '*unassigned*)
-        (tracing-mode #f)
-        (reg-name name))
-    (define (dispatch message)
-      (cond ((eq? message 'get) contents)
-            ((eq? message 'set)
-             (lambda (value) (if tracing-mode 
-                               (begin (display (list "Setting register" reg-name " to value: " value))
-                                      (newline)
-                                      (set! contents value))
-                               (set! contents value))))
-            ((eq? message 'tracing-on) (set! tracing-mode #t))
-            ((eq? message 'tracing-off) (set! tracing-mode #f))
-            (else
-             (error "Unknown request -- REGISTER" message))))
-    dispatch));}}}
 
 (define fact-machine ;{{{
   (make-machine 
