@@ -27,147 +27,18 @@
 ;;; To find this stack code below, look for comments with **
 
 
-(define (make-machine register-names ops controller-text)
-  (let ((machine (make-new-machine)))
-    (for-each (lambda (register-name)
-                ((machine 'allocate-register) register-name))
-              register-names)
-    ((machine 'install-operations) ops)    
-    ((machine 'install-instruction-sequence)
-     (assemble controller-text machine))
-    machine))
-
-(define (make-register name)
-  (let ((contents '*unassigned*))
-    (define (dispatch message)
-      (cond ((eq? message 'get) contents)
-            ((eq? message 'set)
-             (lambda (value) (set! contents value)))
-            (else
-             (error "Unknown request -- REGISTER" message))))
-    dispatch))
-
 (define (get-contents register)
   (register 'get))
 
 (define (set-contents! register value)
   ((register 'set) value))
 
-;;**original (unmonitored) version from section 5.2.1
-(define (make-stack)
-  (let ((s '()))
-    (define (push x)
-      (set! s (cons x s)))
-    (define (pop)
-      (if (null? s)
-          (error "Empty stack -- POP")
-          (let ((top (car s)))
-            (set! s (cdr s))
-            top)))
-    (define (initialize)
-      (set! s '())
-      'done)
-    (define (dispatch message)
-      (cond ((eq? message 'push) push)
-            ((eq? message 'pop) (pop))
-            ((eq? message 'initialize) (initialize))
-            (else (error "Unknown request -- STACK"
-                         message))))
-    dispatch))
-
 (define (pop stack)
   (stack 'pop))
 
 (define (push stack value)
   ((stack 'push) value))
-
-;;**monitored version from section 5.2.4
-;; (define (make-stack)
-;;   (let ((s '())
-;;         (number-pushes 0)
-;;         (max-depth 0)
-;;         (current-depth 0))
-;;     (define (push x)
-;;       (set! s (cons x s))
-;;       (set! number-pushes (+ 1 number-pushes))
-;;       (set! current-depth (+ 1 current-depth))
-;;       (set! max-depth (max current-depth max-depth)))
-;;     (define (pop)
-;;       (if (null? s)
-;;           (error "Empty stack -- POP")
-;;           (let ((top (car s)))
-;;             (set! s (cdr s))
-;;             (set! current-depth (- current-depth 1))
-;;             top)))    
-;;     (define (initialize)
-;;       (set! s '())
-;;       (set! number-pushes 0)
-;;       (set! max-depth 0)
-;;       (set! current-depth 0)
-;;       'done)
-;;     (define (print-statistics)
-;;       (newline)
-;;       (display (list 'total-pushes  '= number-pushes
-;;                      'maximum-depth '= max-depth)))
-;;     (define (dispatch message)
-;;       (cond ((eq? message 'push) push)
-;;             ((eq? message 'pop) (pop))
-;;             ((eq? message 'initialize) (initialize))
-;;             ((eq? message 'print-statistics)
-;;              (print-statistics))
-;;             (else
-;;              (error "Unknown request -- STACK" message))))
-;;     dispatch))
-
-(define (make-new-machine)
-  (let ((pc (make-register 'pc))
-        (flag (make-register 'flag))
-        (stack (make-stack))
-        (the-instruction-sequence '()))
-    (let ((the-ops
-           (list (list 'initialize-stack
-                       (lambda () (stack 'initialize)))
-                 ;;**next for monitored stack (as in section 5.2.4)
-                 ;;  -- comment out if not wanted
-                 (list 'print-stack-statistics
-                       (lambda () (stack 'print-statistics)))))
-          (register-table
-           (list (list 'pc pc) (list 'flag flag))))
-      (define (allocate-register name)
-        (if (assoc name register-table)
-            (error "Multiply defined register: " name)
-            (set! register-table
-                  (cons (list name (make-register name))
-                        register-table)))
-        'register-allocated)
-      (define (lookup-register name)
-        (let ((val (assoc name register-table)))
-          (if val
-              (cadr val)
-              (error "Unknown register:" name))))
-      (define (execute)
-        (let ((insts (get-contents pc)))
-          (if (null? insts)
-              'done
-              (begin
-                ((instruction-execution-proc (car insts)))
-                (execute)))))
-      (define (dispatch message)
-        (cond ((eq? message 'start)
-               (set-contents! pc the-instruction-sequence)
-               (execute))
-              ((eq? message 'install-instruction-sequence)
-               (lambda (seq) (set! the-instruction-sequence seq)))
-              ((eq? message 'allocate-register) allocate-register)
-              ((eq? message 'get-register) lookup-register)
-              ((eq? message 'install-operations)
-               (lambda (ops) (set! the-ops (append the-ops ops))))
-              ((eq? message 'stack) stack)
-              ((eq? message 'operations) the-ops)
-              (else (error "Unknown request -- MACHINE" message))))
-      dispatch)))
-
-
+  
 (define (start machine)
   (machine 'start))
 
@@ -187,21 +58,6 @@
       (update-insts! insts labels machine)
       insts)))
 
-(define (extract-labels text receive)
-  (if (null? text)
-      (receive '() '())
-      (extract-labels (cdr text)
-       (lambda (insts labels)
-         (let ((next-inst (car text)))
-           (if (symbol? next-inst)
-               (receive insts
-                        (cons (make-label-entry next-inst
-                                                insts)
-                              labels))
-               (receive (cons (make-instruction next-inst)
-                              insts)
-                        labels)))))))
-
 (define (update-insts! insts labels machine)
   (let ((pc (get-register machine 'pc))
         (flag (get-register machine 'flag))
@@ -215,18 +71,6 @@
          (instruction-text inst) labels machine
          pc flag stack ops)))
      insts)))
-
-(define (make-instruction text)
-  (cons text '()))
-
-(define (instruction-text inst)
-  (car inst))
-
-(define (instruction-execution-proc inst)
-  (cdr inst))
-
-(define (set-instruction-execution-proc! inst proc)
-  (set-cdr! inst proc))
 
 (define (make-label-entry label-name insts)
   (cons label-name insts))
@@ -295,7 +139,6 @@
 (define (test-condition test-instruction)
   (cdr test-instruction))
 
-
 (define (make-branch inst machine labels flag pc)
   (let ((dest (branch-dest inst)))
     (if (label-exp? dest)
@@ -329,20 +172,6 @@
 
 (define (goto-dest goto-instruction)
   (cadr goto-instruction))
-
-(define (make-save inst machine stack pc)
-  (let ((reg (get-register machine
-                           (stack-inst-reg-name inst))))
-    (lambda ()
-      (push stack (get-contents reg))
-      (advance-pc pc))))
-
-(define (make-restore inst machine stack pc)
-  (let ((reg (get-register machine
-                           (stack-inst-reg-name inst))))
-    (lambda ()
-      (set-contents! reg (pop stack))    
-      (advance-pc pc))))
 
 (define (stack-inst-reg-name stack-instruction)
   (cadr stack-instruction))
@@ -489,43 +318,6 @@
 
 ;; So that's cool
 
-(define (make-register name)
-  (let ((contents '*unassigned*) (reg-name name))
-    (define (dispatch message)
-      (cond ((eq? message 'get) contents)
-            ((eq? message 'name) reg-name)
-            ((eq? message 'set)
-             (lambda (value) (set! contents value)))
-            (else
-             (error "Unknown request -- REGISTER" message))))
-    dispatch))
-
-(define (make-stack)
-  (let ((s '()))
-    (define (push x)
-      (set! s (cons x s)))
-    (define (peek)
-      (if (null? s)
-          (error "Empty stack -- POP")
-          (car s)))
-    (define (pop)
-      (if (null? s)
-          (error "Empty stack -- POP")
-          (let ((top (car s)))
-            (set! s (cdr s))
-            top)))
-    (define (initialize)
-      (set! s '())
-      'done)
-    (define (dispatch message)
-      (cond ((eq? message 'push) push)
-            ((eq? message 'pop) (pop))
-            ((eq? message 'peek) (peek))
-            ((eq? message 'initialize) (initialize))
-            (else (error "Unknown request -- STACK"
-                         message))))
-    dispatch))
-
 ;; zenAndroid :: when pushing the pair in the stack, helps to save the register's name.
 
 (define (get-reg-name register)
@@ -622,86 +414,6 @@
             (insts->entry raw-insts)
             (insts->stack-regs raw-insts))));}}}
 
-(define (make-machine register-names ops controller-text);{{{
-  (let ((machine (make-new-machine)))
-    (for-each (lambda (register-name)
-                ((machine 'allocate-register) register-name))
-              register-names)
-    ((machine 'install-operations) ops)    
-    ((machine 'install-instruction-sequence)
-     (assemble controller-text machine))
-    ((machine 'install-instruction-scan-results)
-     (inst-scan controller-text (machine 'reg-source)))
-    machine));}}}
-
-(define (make-new-machine);{{{
-  (let ((pc (make-register 'pc))
-        (flag (make-register 'flag))
-        (stack (make-stack))
-        (the-instruction-sequence '())
-        (entry-regs '())
-        (stack-regs '())
-        (sorted-instructions '())
-        (reg-sources (make-hash-table)))
-    (let ((the-ops
-           (list (list 'initialize-stack
-                       (lambda () (stack 'initialize)))
-                 ;;**next for monitored stack (as in section 5.2.4)
-                 ;;  -- comment out if not wanted
-                 (list 'print-stack-statistics
-                       (lambda () (stack 'print-statistics)))))
-          (register-table
-           (list (list 'pc pc) (list 'flag flag))))
-      (define (allocate-register name)
-        (if (assoc name register-table)
-            (error "Multiply defined register: " name)
-            (set! register-table
-                  (cons (list name (make-register name))
-                        register-table)))
-        'register-allocated)
-      (define (lookup-register name);{{{
-        (let ((val (assoc name register-table)))
-          (if val
-              (cadr val)
-              (error "Unknown register:" name))));}}}
-      (define (execute);{{{
-        (let ((insts (get-contents pc)))
-          (if (null? insts)
-              'done
-              (begin
-                ((instruction-execution-proc (car insts)))
-                (execute)))));}}}
-      (define (dispatch message);{{{
-        (case message
-          ((start) ((set-contents! pc the-instruction-sequence)
-                    (execute)))
-          ((install-instruction-sequence)
-           (lambda (seq) (set! the-instruction-sequence seq)))
-          ((allocate-register) allocate-register)
-          ((get-register) lookup-register)
-          ((install-operations) 
-           (lambda (ops) (set! the-ops (append the-ops ops))))
-          ((stack) stack)
-          ((install-instruction-scan-results) 
-           (lambda(arg-list) (set! sorted-instructions (car arg-list))
-                             (set! entry-regs (cadr arg-list))
-                             (set! stack-regs (caddr arg-list))))
-          ((operations) the-ops)
-          ((reg-source) reg-sources)
-          ((install-entries) (lambda (arg) (set! entry-regs arg)))
-          ((install-stack-regs) (lambda (arg) (set! stack-regs arg)))
-          ((install-sorted) (lambda (arg) (set! sorted-instructions arg)))
-          ((show-inst-scan) (pretty-print (list "Sorted Instructions: " sorted-instructions
-                                                "Entry point registers: " entry-regs
-                                                "Stack-interacting registers: " stack-regs
-                                                "Register sources: " (hash-fold
-                                                                       (lambda(k v p)
-                                                                         (cons (list k v) p))
-                                                                       '() reg-sources))))
-          (else (error "Unknown request -- MACHINE" message))));}}}
-      dispatch)));}}}
-
-
 
 (define expt-machine
   (make-machine
@@ -776,74 +488,6 @@
      (inst-scan controller-text (machine 'reg-source)))
     machine));}}}
 
-(define (make-new-machine);{{{
-  (let ((pc (make-register 'pc))
-        (flag (make-register 'flag))
-        (stack (make-stack))
-        (the-instruction-sequence '())
-        (entry-regs '())
-        (stack-regs '())
-        (sorted-instructions '())
-        (reg-sources (make-hash-table)))
-    (let ((the-ops
-           (list (list 'initialize-stack
-                       (lambda () (stack 'initialize)))
-                 ;;**next for monitored stack (as in section 5.2.4)
-                 ;;  -- comment out if not wanted
-                 (list 'print-stack-statistics
-                       (lambda () (stack 'print-statistics)))))
-          (register-table
-           (list (list 'pc pc) (list 'flag flag))))
-      (define (allocate-register name)
-        (if (assoc name register-table)
-            (error "Multiply defined register: " name)
-            (set! register-table
-                  (cons (list name (make-register name))
-                        register-table)))
-        'register-allocated)
-      (define (lookup-register name);{{{
-        (let ((val (assoc name register-table)))
-          (if val
-              (cadr val)
-              (error "Unknown register:" name))));}}}
-      (define (execute);{{{
-        (let ((insts (get-contents pc)))
-          (if (null? insts)
-              'done
-              (begin
-                ((instruction-execution-proc (car insts)))
-                (execute)))));}}}
-      (define (dispatch message);{{{
-        (case message
-          ((start) (set-contents! pc the-instruction-sequence)
-                   (execute))
-          ((install-instruction-sequence)
-           (lambda (seq) (set! the-instruction-sequence seq)))
-          ((allocate-register) allocate-register)
-          ((get-register) lookup-register)
-          ((install-operations) 
-           (lambda (ops) (set! the-ops (append the-ops ops))))
-          ((stack) stack)
-          ((install-instruction-scan-results) 
-           (lambda(arg-list) (set! sorted-instructions (car arg-list))
-                             (set! entry-regs (cadr arg-list))
-                             (set! stack-regs (caddr arg-list))))
-          ((operations) the-ops)
-          ((reg-source) reg-sources)
-          ((get-sorted-insts) sorted-instructions)
-          ((install-entries) (lambda (arg) (set! entry-regs arg)))
-          ((install-stack-regs) (lambda (arg) (set! stack-regs arg)))
-          ((install-sorted) (lambda (arg) (set! sorted-instructions arg)))
-          ((show-inst-scan) (pretty-print (list "Sorted Instructions: " sorted-instructions
-                                                "Entry point registers: " entry-regs
-                                                "Stack-interacting registers: " stack-regs
-                                                "Register sources: " (hash-fold
-                                                                       (lambda(k v p)
-                                                                         (cons (list k v) p))
-                                                                       '() reg-sources))))
-          (else (error "Unknown request -- MACHINE" message))));}}}
-      dispatch)));}}}
-
 (define fib-machine ;{{{
   (make-machine ;register-names ops controller-text 
     (list (list '< <) (list '- -) (list '+ +)) 
@@ -917,78 +561,6 @@
              (error "Unknown request -- STACK" message))))
     dispatch));}}}
 
-(define (make-new-machine);{{{
-  (let ((pc (make-register 'pc))
-        (flag (make-register 'flag))
-        (stack (make-stack))
-        (the-instruction-sequence '())
-        (instruction-count 0)
-        (entry-regs '())
-        (stack-regs '())
-        (sorted-instructions '())
-        (reg-sources (make-hash-table)))
-    (let ((the-ops
-           (list (list 'initialize-stack
-                       (lambda () (stack 'initialize)))
-                 ;;**next for monitored stack (as in section 5.2.4)
-                 ;;  -- comment out if not wanted
-                 (list 'print-stack-statistics
-                       (lambda () (stack 'print-statistics)))))
-          (register-table
-           (list (list 'pc pc) (list 'flag flag))))
-      (define (allocate-register name)
-        (if (assoc name register-table)
-            (error "Multiply defined register: " name)
-            (set! register-table
-                  (cons (list name (make-register name))
-                        register-table)))
-        'register-allocated)
-      (define (lookup-register name);{{{
-        (let ((val (assoc name register-table)))
-          (if val
-              (cadr val)
-              (error "Unknown register:" name))));}}}
-      (define (execute);{{{
-        (let ((insts (get-contents pc)))
-          (if (null? insts)
-              (begin (stack 'print-statistics)
-                     (stack 'initialize)
-                     'done)
-              (begin
-                (set! instruction-count (+ instruction-count 1)); Counting this instruction
-                ((instruction-execution-proc (car insts)))
-                (execute)))));}}}
-      (define (dispatch message);{{{
-        (case message
-          ((start) (set! instruction-count 0); Initializing the instruction-count at the beginning of an execution.
-                   (set-contents! pc the-instruction-sequence)
-                   (execute))
-          ((install-instruction-sequence)
-           (lambda (seq) (set! the-instruction-sequence seq)))
-          ((allocate-register) allocate-register)
-          ((get-register) lookup-register)
-          ((install-operations) 
-           (lambda (ops) (set! the-ops (append the-ops ops))))
-          ((stack) stack)
-          ((install-instruction-scan-results) 
-           (lambda(arg-list) (set! sorted-instructions (car arg-list))
-                             (set! entry-regs (cadr arg-list))
-                             (set! stack-regs (caddr arg-list))))
-          ((operations) the-ops)
-          ((reg-source) reg-sources)
-          ((get-sorted-insts) sorted-instructions)
-          ((show-inst-scan) (pretty-print (list "Sorted Instructions: " sorted-instructions
-                                                "Entry point registers: " entry-regs
-                                                "Stack-interacting registers: " stack-regs
-                                                "Register sources: " (hash-fold
-                                                                       (lambda(k v p)
-                                                                         (cons (list k v) p))
-                                                                       '() reg-sources))))
-          ((print-instruction-count) instruction-count); Access to instruction-count
-          ((reset-instruction-count) (set! instruction-count 0)); Explicitly resetting the instruction count (not needed per se)
-          (else (error "Unknown request -- MACHINE" message))));}}}
-      dispatch)));}}}
-
 (define fib-machine ;{{{
   (make-machine ;register-names ops controller-text 
     (list (list '< <) (list '- -) (list '+ +)) 
@@ -1050,78 +622,6 @@
       (assign val (const 1))                  ; base case: 1!=1
       (goto (reg continue))                   ; return to caller
       fact-done)));}}}
-
-(define (make-new-machine);{{{
-  (let ((pc (make-register 'pc))
-        (flag (make-register 'flag))
-        (stack (make-stack))
-        (the-instruction-sequence '())
-        (instruction-count 0)
-        (entry-regs '())
-        (stack-regs '())
-        (sorted-instructions '())
-        (reg-sources (make-hash-table)))
-    (let ((the-ops
-           (list (list 'initialize-stack
-                       (lambda () (stack 'initialize)))
-                 ;;**next for monitored stack (as in section 5.2.4)
-                 ;;  -- comment out if not wanted
-                 (list 'print-stack-statistics
-                       (lambda () (stack 'print-statistics)))))
-          (register-table
-           (list (list 'pc pc) (list 'flag flag))))
-      (define (allocate-register name)
-        (if (assoc name register-table)
-            (error "Multiply defined register: " name)
-            (set! register-table
-                  (cons (list name (make-register name))
-                        register-table)))
-        'register-allocated)
-      (define (lookup-register name);{{{
-        (let ((val (assoc name register-table)))
-          (if val
-              (cadr val)
-              (error "Unknown register:" name))));}}}
-      (define (execute);{{{
-        (let ((insts (get-contents pc)))
-          (if (null? insts)
-              (begin (stack 'print-statistics)
-                     (stack 'initialize)
-                     'done)
-              (begin
-                (set! instruction-count (+ instruction-count 1)); Counting this instruction
-                ((instruction-execution-proc (car insts)))
-                (execute)))));}}}
-      (define (dispatch message);{{{
-        (case message
-          ((start) (set! instruction-count 0); Initializing the instruction-count at the beginning of an execution.
-                   (set-contents! pc the-instruction-sequence)
-                   (execute))
-          ((install-instruction-sequence)
-           (lambda (seq) (set! the-instruction-sequence seq)))
-          ((allocate-register) allocate-register)
-          ((get-register) lookup-register)
-          ((install-operations) 
-           (lambda (ops) (set! the-ops (append the-ops ops))))
-          ((stack) stack)
-          ((install-instruction-scan-results) 
-           (lambda(arg-list) (set! sorted-instructions (car arg-list))
-                             (set! entry-regs (cadr arg-list))
-                             (set! stack-regs (caddr arg-list))))
-          ((operations) the-ops)
-          ((reg-source) reg-sources)
-          ((get-sorted-insts) sorted-instructions)
-          ((show-inst-scan) (pretty-print (list "Sorted Instructions: " sorted-instructions
-                                                "Entry point registers: " entry-regs
-                                                "Stack-interacting registers: " stack-regs
-                                                "Register sources: " (hash-fold
-                                                                       (lambda(k v p)
-                                                                         (cons (list k v) p))
-                                                                       '() reg-sources))))
-          ((print-instruction-count) instruction-count); Access to instruction-count
-          ((reset-instruction-count) (set! instruction-count 0)); Explicitly resetting the instruction count (not needed per se)
-          (else (error "Unknown request -- MACHINE" message))));}}}
-      dispatch)));}}}
 
 (define fib-machine ;{{{
   (make-machine ;register-names ops controller-text 
@@ -1186,86 +686,6 @@
       fact-done
       (perform (op print-stack-statistics))
       (perform (op initialize-stack)))));}}}
-
-(define (make-new-machine);{{{
-  (let ((pc (make-register 'pc))
-        (flag (make-register 'flag))
-        (stack (make-stack))
-        (the-instruction-sequence '())
-        (instruction-count 0) ; Instruction counter
-        (tracing-mode #f) ; Tracing mode defaulting on the OFF position.
-        (entry-regs '())
-        (stack-regs '())
-        (sorted-instructions '())
-        (reg-sources (make-hash-table)))
-    (let ((the-ops
-           (list (list 'initialize-stack
-                       (lambda () (stack 'initialize)))
-                 ;;**next for monitored stack (as in section 5.2.4)
-                 ;;  -- comment out if not wanted
-                 (list 'print-stack-statistics
-                       (lambda () (stack 'print-statistics)))))
-          (register-table
-           (list (list 'pc pc) (list 'flag flag))))
-      (define (allocate-register name)
-        (if (assoc name register-table)
-            (error "Multiply defined register: " name)
-            (set! register-table
-                  (cons (list name (make-register name))
-                        register-table)))
-        'register-allocated)
-      (define (lookup-register name);{{{
-        (let ((val (assoc name register-table)))
-          (if val
-              (cadr val)
-              (error "Unknown register:" name))));}}}
-      (define (execute);{{{
-        (let ((insts (get-contents pc)))
-          (if (null? insts)
-            (begin (stack 'print-statistics)
-                   (stack 'initialize)
-                   'done)
-              (begin
-                (set! instruction-count (+ instruction-count 1)); Counting this instruction
-                (if tracing-mode
-                  (begin (display (instruction-text (car insts)))
-                         (newline))) ; If the tracing is on,
-                                     ; display the instruction text
-                ((instruction-execution-proc (car insts)))
-                (execute)))));}}}
-      (define (dispatch message);{{{
-        (case message
-          ((start) (set! instruction-count 0); Initializing the instruction-count at the beginning of an execution.
-                   (set-contents! pc the-instruction-sequence)
-                   (execute))
-          ((install-instruction-sequence)
-           (lambda (seq) (set! the-instruction-sequence seq)))
-          ((allocate-register) allocate-register)
-          ((get-register) lookup-register)
-          ((install-operations) 
-           (lambda (ops) (set! the-ops (append the-ops ops))))
-          ((stack) stack)
-          ((install-instruction-scan-results) 
-           (lambda(arg-list) (set! sorted-instructions (car arg-list))
-                             (set! entry-regs (cadr arg-list))
-                             (set! stack-regs (caddr arg-list))))
-          ((operations) the-ops)
-          ((reg-source) reg-sources)
-          ((get-sorted-insts) sorted-instructions)
-          ((show-inst-scan) (pretty-print (list "Sorted Instructions: " sorted-instructions
-                                                "Entry point registers: " entry-regs
-                                                "Stack-interacting registers: " stack-regs
-                                                "Register sources: " (hash-fold
-                                                                       (lambda(k v p)
-                                                                         (cons (list k v) p))
-                                                                       '() reg-sources))))
-          ((print-instruction-count) instruction-count); Access to instruction-count
-          ((reset-instruction-count) (set! instruction-count 0)); Explicitly resetting the instruction count
-          ; (not needed per se, but SICP asks and I try to deliver ¯\_(ツ)_/¯)
-          ((tracing-on) (set! tracing-mode #t)) ;; Tracing mode toggles
-          ((tracing-off) (set! tracing-mode #f))
-          (else (error "Unknown request -- MACHINE" message))));}}}
-      dispatch)));}}}
 
 (define fib-machine ;{{{
   (make-machine ;register-names ops controller-text 
