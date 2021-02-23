@@ -1,31 +1,5 @@
-;/usr/bin/guile-2.2 -l
-
 (use-modules (ice-9 pretty-print)) ; Pretty printing
 (use-modules (srfi srfi-1)) ; Remove duplicate
-
-; Well, first of all.
-; The habit of mine to keep an older solution to an exercise and then 'overriding'
-; it in the next exercise by loading the preceeding exercise and just shadowing the previous namespace is
-; quite good in terms of me avoiding to rewrite the code, but it isn't very good to
-; enable me to understand
-; which version of the functions are used in which file, and so, the first thing i will do is bring all
-; the code and make this file a stand-alone file before writing anything.
-
-
-;;;;REGISTER-MACHINE SIMULATOR FROM SECTION 5.2 OF
-;;;; STRUCTURE AND INTERPRETATION OF COMPUTER PROGRAMS
-
-;;;;Matches code in ch5.scm
-
-;;;;This file can be loaded into Scheme as a whole.
-;;;;Then you can define and simulate machines as shown in section 5.2
-
-;;;**NB** there are two versions of make-stack below.
-;;; Choose the monitored or unmonitored one by reordering them to put the
-;;;  one you want last, or by commenting one of them out.
-;;; Also, comment in/out the print-stack-statistics op in make-new-machine
-;;; To find this stack code below, look for comments with **
-
 
 (define (get-contents register)
   (register 'get))
@@ -393,9 +367,12 @@
              (error "Unknown request -- STACK" message))))
     dispatch));}}}
 
-
 (define (make-instruction text)
-  (cons text (cons '() '())))
+  (cons text         (cons '()            '())))
+;         ^                 ^              ^
+;         |                 |              |
+;    Instruction          Execution    Instruction
+;       Text              Procedure       labels
 
 (define (instruction-text inst)
   (car inst))
@@ -454,7 +431,6 @@
             (else
              (error "Unknown request -- REGISTER" message))))
     dispatch));}}}
-
 
 (define (make-new-machine);{{{
   (let ((pc (make-register 'pc))
@@ -575,34 +551,7 @@
         immediate-answer 
         (assign val (reg n))               ; base case: Fib(n)=n 
         (goto (reg continue)) 
-        fib-done
-        (perform (op print-stack-statistics))
-        (perform (op initialize-stack)))));}}}
-
-(define fact-machine ;{{{
-  (make-machine 
-    (list (list '- -) (list '* *) (list '+ +) (list '= =))
-    '( (assign continue (label fact-done))     ; set up final return address
-      fact-loop
-      (test (op =) (reg n) (const 1))
-      (branch (label base-case))
-      ;; Set up for the recursive call by saving n and continue.
-      ;; Set up continue so that the computation will continue
-      ;; at after-fact when the subroutine returns.
-      (save continue)
-      (save n)
-      (assign n (op -) (reg n) (const 1))
-      (assign continue (label after-fact))
-      (goto (label fact-loop))
-      after-fact
-      (restore n)
-      (restore continue)
-      (assign val (op *) (reg n) (reg val))   ; val now contains n(n-1)!
-      (goto (reg continue))                   ; return to caller
-      base-case
-      (assign val (const 1))                  ; base case: 1!=1
-      (goto (reg continue))                   ; return to caller
-      fact-done)));}}}
+        fib-done)));}}}
 
 (define fact-machine ;{{{
   (make-machine 
@@ -630,7 +579,8 @@
       fact-done)));}}}
 
 ; ((get-register fact-machine 'n) 'tracing-on)
-((get-register fact-machine 'val) 'tracing-on)
-(set-register-contents! fact-machine 'n 18)
-(fact-machine 'tracing-on)
-(start fact-machine)
+((get-register fib-machine 'n) 'tracing-on)
+((get-register fib-machine 'val) 'tracing-on)
+(set-register-contents! fib-machine 'n 18)
+(fib-machine 'tracing-on)
+(start fib-machine)
