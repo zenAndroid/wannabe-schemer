@@ -1,6 +1,6 @@
 (use-modules (ice-9 pretty-print)) ; Pretty printing
 (use-modules (srfi srfi-1)) ; Remove duplicate
-
+; Hope this SSH thing works out
 (define (get-contents register)
   (register 'get))
 
