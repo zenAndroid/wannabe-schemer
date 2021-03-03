@@ -1,4 +1,4 @@
-(use-modules (ice-9 pretty-print)) ; Pretty printing
+(use-modules (ice-9 pretty-print))
 (use-modules (srfi srfi-1)) ; Remove duplicate
 
 (define (get-contents register)
@@ -26,13 +26,13 @@
 (define (get-register machine reg-name)
   ((machine 'get-register) reg-name))
 
-(define (assemble controller-text machine)
+(define (assemble controller-text machine);{{{
   (extract-labels controller-text
     (lambda (insts labels)
       (update-insts! insts labels machine)
-      insts)))
+      insts)));}}}
 
-(define (update-insts! insts labels machine)
+(define (update-insts! insts labels machine);{{{
   (let ((pc (get-register machine 'pc))
         (flag (get-register machine 'flag))
         (stack (machine 'stack))
@@ -44,7 +44,7 @@
         (make-execution-procedure
          (instruction-text inst) labels machine
          pc flag stack ops)))
-     insts)))
+     insts)));}}}
 
 (define (make-label-entry label-name insts)
   (cons label-name insts))
@@ -56,7 +56,7 @@
         (error "Undefined label -- ASSEMBLE" label-name))))
 
 
-(define (make-execution-procedure inst labels machine
+(define (make-execution-procedure inst labels machine;{{{
                                   pc flag stack ops)
   (cond ((eq? (car inst) 'assign)
          (make-assign inst machine labels ops pc))
@@ -73,10 +73,10 @@
         ((eq? (car inst) 'perform)
          (make-perform inst machine labels ops pc))
         (else (error "Unknown instruction type -- ASSEMBLE"
-                     inst))))
+                     inst))));}}}
 
 
-(define (make-assign inst machine labels operations pc)
+(define (make-assign inst machine labels operations pc);{{{
   (let ((target
          (get-register machine (assign-reg-name inst)))
         (value-exp (assign-value-exp inst)))
@@ -88,7 +88,7 @@
                 (car value-exp) machine labels))))
       (lambda ()                ; execution procedure for assign
         (set-contents! target (value-proc))
-        (advance-pc pc)))))
+        (advance-pc pc)))));}}}
 
 (define (assign-reg-name assign-instruction)
   (cadr assign-instruction))
@@ -99,7 +99,7 @@
 (define (advance-pc pc)
   (set-contents! pc (cdr (get-contents pc))))
 
-(define (make-test inst machine labels operations flag pc)
+(define (make-test inst machine labels operations flag pc);{{{
   (let ((condition (test-condition inst)))
     (if (operation-exp? condition)
         (let ((condition-proc
@@ -108,12 +108,12 @@
           (lambda ()
             (set-contents! flag (condition-proc))
             (advance-pc pc)))
-        (error "Bad TEST instruction -- ASSEMBLE" inst))))
+        (error "Bad TEST instruction -- ASSEMBLE" inst))));}}}
 
 (define (test-condition test-instruction)
   (cdr test-instruction))
 
-(define (make-branch inst machine labels flag pc)
+(define (make-branch inst machine labels flag pc);{{{
   (let ((dest (branch-dest inst)))
     (if (label-exp? dest)
         (let ((insts
@@ -122,13 +122,13 @@
             (if (get-contents flag)
                 (set-contents! pc insts)
                 (advance-pc pc))))
-        (error "Bad BRANCH instruction -- ASSEMBLE" inst))))
+        (error "Bad BRANCH instruction -- ASSEMBLE" inst))));}}}
 
 (define (branch-dest branch-instruction)
   (cadr branch-instruction))
 
 
-(define (make-goto inst machine labels pc)
+(define (make-goto inst machine labels pc);{{{
   (let ((dest (goto-dest inst)))
     (cond ((label-exp? dest)
            (let ((insts
@@ -142,7 +142,7 @@
              (lambda ()
                (set-contents! pc (get-contents reg)))))
           (else (error "Bad GOTO instruction -- ASSEMBLE"
-                       inst)))))
+                       inst)))));}}}
 
 (define (goto-dest goto-instruction)
   (cadr goto-instruction))
@@ -150,7 +150,7 @@
 (define (stack-inst-reg-name stack-instruction)
   (cadr stack-instruction))
 
-(define (make-perform inst machine labels operations pc)
+(define (make-perform inst machine labels operations pc);{{{
   (let ((action (perform-action inst)))
     (if (operation-exp? action)
         (let ((action-proc
@@ -159,11 +159,11 @@
           (lambda ()
             (action-proc)
             (advance-pc pc)))
-        (error "Bad PERFORM instruction -- ASSEMBLE" inst))))
+        (error "Bad PERFORM instruction -- ASSEMBLE" inst))));}}}
 
 (define (perform-action inst) (cdr inst))
 
-(define (make-primitive-exp exp machine labels)
+(define (make-primitive-exp exp machine labels);{{{
   (cond ((constant-exp? exp)
          (let ((c (constant-exp-value exp)))
            (lambda () c)))
@@ -177,7 +177,7 @@
                                 (register-exp-reg exp))))
            (lambda () (get-contents r))))
         (else
-         (error "Unknown expression type -- ASSEMBLE" exp))))
+         (error "Unknown expression type -- ASSEMBLE" exp))));}}}
 
 (define (register-exp? exp) (tagged-list? exp 'reg))
 
@@ -192,14 +192,14 @@
 (define (label-exp-label exp) (cadr exp))
 
 
-(define (make-operation-exp exp machine labels operations)
+(define (make-operation-exp exp machine labels operations);{{{
   (let ((op (lookup-prim (operation-exp-op exp) operations))
         (aprocs
          (map (lambda (e)
                 (make-primitive-exp e machine labels))
               (operation-exp-operands exp))))
     (lambda ()
-      (apply op (map (lambda (p) (p)) aprocs)))))
+      (apply op (map (lambda (p) (p)) aprocs)))));}}}
 
 (define (operation-exp? exp)
   (and (pair? exp) (tagged-list? (car exp) 'op)))
@@ -254,7 +254,7 @@
 ;; Question remains, ....
 ;; Assembly time, or simulation time?
 
-(define (make-restore inst machine stack pc)
+(define (make-restore inst machine stack pc);{{{
   (let ((reg (get-register machine
                            (stack-inst-reg-name inst))))
     (let ((reg-name (get-reg-name reg)))
@@ -265,7 +265,7 @@
               (set-contents! reg (cdr (pop stack)))
               (advance-pc pc))
             (error "Stack top not conforming to the request -- MAKE-RESTORE" 
-                   (list reg-name reg-at-top-of-stack))))))))
+                   (list reg-name reg-at-top-of-stack))))))));}}}
 
 (define (inst-scan insts reg-source);{{{
   (define (insts->entry raw-insts);{{{
@@ -367,36 +367,66 @@
              (error "Unknown request -- STACK" message))))
     dispatch));}}}
 
-(define (make-instruction text)
-  (cons text         (cons '()            '())))
-;         ^                 ^              ^
-;         |                 |              |
-;    Instruction          Execution    Instruction
-;       Text              Procedure       labels
+; ; ; ; ; (define (make-instruction text)
+; ; ; ; ;   (cons text         (cons '()            '())))
+; ; ; ; ; ;         ^                 ^              ^
+; ; ; ; ; ;         |                 |              |
+; ; ; ; ; ;    Instruction          Execution    Instruction
+; ; ; ; ; ;       Text              Procedure       labels
+; ; ; ; ; 
+; ; ; ; ; (define (instruction-text inst)
+; ; ; ; ;   (car inst))
+; ; ; ; ; 
+; ; ; ; ; (define (instruction-execution-proc inst)
+; ; ; ; ;   (cadr inst))
+; ; ; ; ; 
+; ; ; ; ; (define (instruction-labels inst)
+; ; ; ; ;   (cddr inst))
+; ; ; ; ; 
+; ; ; ; ; (define (set-instruction-execution-proc! inst proc)
+; ; ; ; ;   (set-car! (cdr inst) proc))
+; ; ; ; ; 
+; ; ; ; ; (define (set-instruction-labels! inst labels)
+; ; ; ; ;   (set-cdr! (cdr inst) labels))
+; ; ; ; ; 
+; ; ; ; ; (define (add-a-instruction-label! inst label)
+; ; ; ; ;   (set-instruction-labels! inst (cons label (instruction-labels inst))))
 
-(define (instruction-text inst)
+(define (make-instruction instruction-number text)
+  (cons instruction-number (cons text (cons '()            '()))))
+;            ^              ^                ^              ^
+;            |              |                |              |
+;        Instruction    Instruction         Execution    Instruction
+;        Order/Number      Text             Procedure       labels
+
+(define (instruction-order inst)
   (car inst))
 
-(define (instruction-execution-proc inst)
+(define (instruction-text inst)
   (cadr inst))
 
+(define (instruction-execution-proc inst)
+  (caddr inst))
+
 (define (instruction-labels inst)
-  (cddr inst))
+  (cdddr inst))
 
 (define (set-instruction-execution-proc! inst proc)
-  (set-car! (cdr inst) proc))
+  (set-car! (cddr inst) proc))
 
 (define (set-instruction-labels! inst labels)
-  (set-cdr! (cdr inst) labels))
+  (set-cdr! (cddr inst) labels))
 
 (define (add-a-instruction-label! inst label)
   (set-instruction-labels! inst (cons label (instruction-labels inst))))
 
 ;;Changes in procedure extract-labels
-(define (extract-labels text receive)
+
+(define (extract-labels text receive);{{{
   (if (null? text)
     (receive '() '())
-    (extract-labels (cdr text)
+    (extract-labels  
+                    (cdr text)
                     (lambda (insts labels)
                       (let ((next-inst (car text)))
                         (if (symbol? next-inst)
@@ -411,7 +441,7 @@
                                            labels)))
                           (receive (cons (make-instruction next-inst)
                                          insts)
-                                   labels)))))))
+                                   labels)))))));}}}
 
 (define (make-register name);{{{
   (let ((contents '*unassigned*)
@@ -422,7 +452,6 @@
             ((eq? message 'set)
              (lambda (value) (if tracing-mode 
                                (begin (display (list "Setting register" reg-name " to value: " value))
-                                      (newline)
                                       (set! contents value))
                                (set! contents value))))
             ((eq? message 'name) reg-name)
@@ -446,25 +475,23 @@
     (let ((the-ops
            (list (list 'initialize-stack
                        (lambda () (stack 'initialize)))
-                 ;;**next for monitored stack (as in section 5.2.4)
-                 ;;  -- comment out if not wanted
                  (list 'print-stack-statistics
                        (lambda () (stack 'print-statistics)))))
           (register-table
            (list (list 'pc pc) (list 'flag flag))))
-      (define (allocate-register name)
+      (define (allocate-register name);{{{
         (if (assoc name register-table)
             (error "Multiply defined register: " name)
             (set! register-table
                   (cons (list name (make-register name))
                         register-table)))
-        'register-allocated)
+        'register-allocated);}}}
       (define (lookup-register name);{{{
         (let ((val (assoc name register-table)))
           (if val
               (cadr val)
               (error "Unknown register:" name))));}}}
-      (define (execute)
+      (define (execute);{{{
         (let ((insts (get-contents pc)))
           (if (null? insts)
             (begin (stack 'print-statistics)
@@ -474,7 +501,6 @@
               (if tracing-mode
                 (begin
                   (for-each (lambda(label)                     ;;;
-                              (newline)                        ;;;
                               (display "Moving over label: ")  ;;;
                               (display label))                 ;;;
                             (instruction-labels (car insts)))  ;;;
@@ -483,7 +509,7 @@
                   (display (instruction-text (car insts))) (newline)))
               ((instruction-execution-proc (car insts)))
               (set! instruction-count (+ instruction-count 1))
-              (execute)))))
+              (execute)))));}}}
       (define (dispatch message);{{{
         (case message
           ((start) (set! instruction-count 0); Initializing the instruction-count at the beginning of an execution.
@@ -515,72 +541,65 @@
           ; (not needed per se, but SICP asks and I try to deliver ¯\_(ツ)_/¯)
           ((tracing-on) (set! tracing-mode #t)) ;; Tracing mode toggles
           ((tracing-off) (set! tracing-mode #f))
+          ((nst-seq) the-instruction-sequence)
+          ((print-formatted-insts) (for-each
+                                     (lambda(inst)
+                                       (display
+                                         (list (instruction-text inst)
+                                               (instruction-labels inst)))(newline))
+                                     the-instruction-sequence))
           (else (error "Unknown request -- MACHINE" message))));}}}
       dispatch)));}}}
 
-(define fib-machine ;{{{
-  (make-machine ;register-names ops controller-text 
-    (list (list '< <) (list '- -) (list '+ +)) 
-    '(  ; from ch5.scm 
-        (assign continue (label fib-done)) 
-        fib-loop 
-        (test (op <) (reg n) (const 2)) 
-        (branch (label immediate-answer)) 
-        ;; set up to compute Fib(n-1) 
-        (save continue) 
-        (assign continue (label afterfib-n-1)) 
-        (save n)                           ; save old value of n 
-        (assign n (op -) (reg n) (const 1)); clobber n to n-1 
-        (goto (label fib-loop))            ; perform recursive call 
-        afterfib-n-1                         ; upon return, val contains Fib(n-1) 
-        (restore n) 
-        (restore continue) 
-        ;; set up to compute Fib(n-2) 
-        (assign n (op -) (reg n) (const 2)) 
-        (save continue) 
-        (assign continue (label afterfib-n-2)) 
-        (save val)                         ; save Fib(n-1) 
-        (goto (label fib-loop)) 
-        afterfib-n-2                         ; upon return, val contains Fib(n-2) 
-        (assign n (reg val))               ; n now contains Fib(n-2) 
-        (restore val)                      ; val now contains Fib(n-1) 
-        (restore continue) 
-        (assign val                        ; Fib(n-1)+Fib(n-2) 
-                (op +) (reg val) (reg n))  
-        (goto (reg continue))              ; return to caller, answer is in val 
-        immediate-answer 
-        (assign val (reg n))               ; base case: Fib(n)=n 
-        (goto (reg continue)) 
-        fib-done)));}}}
+; (define fib-machine ;{{{
+;   (make-machine ;register-names ops controller-text 
+;     (list (list '< <) (list '- -) (list '+ +)) 
+;     '(  ; from ch5.scm 
+;         (assign continue (label fib-done)) 
+;         fib-loop 
+;         (test (op <) (reg n) (const 2)) 
+;         (branch (label immediate-answer)) 
+;         ;; set up to compute Fib(n-1) 
+;         (save continue) 
+;         (assign continue (label afterfib-n-1)) 
+;         (save n)                           ; save old value of n 
+;         (assign n (op -) (reg n) (const 1)); clobber n to n-1 
+;         (goto (label fib-loop))            ; perform recursive call 
+;         afterfib-n-1                         ; upon return, val contains Fib(n-1) 
+;         (restore n) 
+;         (restore continue) 
+;         ;; set up to compute Fib(n-2) 
+;         (assign n (op -) (reg n) (const 2)) 
+;         (save continue) 
+;         (assign continue (label afterfib-n-2)) 
+;         (save val)                         ; save Fib(n-1) 
+;         (goto (label fib-loop)) 
+;         afterfib-n-2                         ; upon return, val contains Fib(n-2) 
+;         (assign n (reg val))               ; n now contains Fib(n-2) 
+;         (restore val)                      ; val now contains Fib(n-1) 
+;         (restore continue) 
+;         (assign val                        ; Fib(n-1)+Fib(n-2) 
+;                 (op +) (reg val) (reg n))  
+;         (goto (reg continue))              ; return to caller, answer is in val 
+;         immediate-answer 
+;         (assign val (reg n))               ; base case: Fib(n)=n 
+;         (goto (reg continue)) 
+;         fib-done)));}}}
 
-(define fact-machine ;{{{
-  (make-machine 
-    (list (list '- -) (list '* *) (list '+ +) (list '= =))
-    '( (assign continue (label fact-done))     ; set up final return address
-      fact-loop
-      (test (op =) (reg n) (const 1))
-      (branch (label base-case))
-      ;; Set up for the recursive call by saving n and continue.
-      ;; Set up continue so that the computation will continue
-      ;; at after-fact when the subroutine returns.
-      (save continue)
-      (save n)
-      (assign n (op -) (reg n) (const 1))
-      (assign continue (label after-fact))
-      (goto (label fact-loop))
-      after-fact
-      (restore n)
-      (restore continue)
-      (assign val (op *) (reg n) (reg val))   ; val now contains n(n-1)!
-      (goto (reg continue))                   ; return to caller
-      base-case
-      (assign val (const 1))                  ; base case: 1!=1
-      (goto (reg continue))                   ; return to caller
-      fact-done)));}}}
+(define gcd-machine
+  (make-machine
+   (list (list 'rem remainder) (list '= =))
+   '(test-b
+       (test (op =) (reg b) (const 0))
+       (branch (label gcd-done))
+       (assign t (op rem) (reg a) (reg b))
+       (assign a (reg b))
+       (assign b (reg t))
+       (goto (label test-b))
+     gcd-done)))
 
-; ((get-register fact-machine 'n) 'tracing-on)
-((get-register fib-machine 'n) 'tracing-on)
-((get-register fib-machine 'val) 'tracing-on)
-(set-register-contents! fib-machine 'n 18)
-(fib-machine 'tracing-on)
-(start fib-machine)
+(for-each
+  (lambda (inst)
+    (display inst)
+    (newline))
+  (gcd-machine 'nst-seq))))
